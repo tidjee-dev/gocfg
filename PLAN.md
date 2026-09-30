@@ -45,9 +45,11 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - Root `LoadEnv` wrapper. Tests incl. `OS > .env > default`.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
-- [ ] S3 CLI foundation (ROADMAP M3)
+- [x] S3 CLI foundation (ROADMAP M3)
   - `cobra` + `lipgloss` CLI-only, `cmd/gocfg/main.go`,
     `internal/cli/{root,version}.go`, ldflags version.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass,
+    `--help` + `version` verified).
 
 - [ ] S4 `gocfg init` (ROADMAP M4)
   - `internal/scaffold/` + `embed` templates, error-returning
