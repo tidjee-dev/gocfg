@@ -6,6 +6,9 @@ promised before `v1.0.0`.
 
 ## Unreleased
 
+- `gocfg doctor`: read-only diagnostic narrative (toolchain, files,
+  parse health, `.gitignore` coverage, duplicates, OS shadowing);
+  always exits 0.
 - `gocfg diff [--defs]`: file-level manifest/example/env comparison
   (missing keys and default drift fail, extras and secret values warn;
   values never print).

@@ -23,6 +23,7 @@ plain Go code; this CLI only handles project files.`,
 	root.AddCommand(newCheckCmd())
 	root.AddCommand(newExportCmd())
 	root.AddCommand(newDiffCmd())
+	root.AddCommand(newDoctorCmd())
 	root.AddCommand(newValidateCmd())
 	return root
 }

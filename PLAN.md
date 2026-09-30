@@ -156,7 +156,11 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
     drift fail, extras/secret-values/example-only warn, values never
     print, OS ignored. `internal/envdiff` core + cobra wiring.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
-- [ ] S17 `gocfg doctor`
+- [x] S17 `gocfg doctor`
+  - Read-only narrative (toolchain, files + perms, parse health,
+    `.gitignore` coverage, duplicate keys, OS shadowing, example
+    secrets); always exits 0. `internal/cli/doctor.go` + tests.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 - [ ] S18 v1 close-out (STABILITY.md, docs, gate, tag v1.0.0)
 
 ## Traceability (ROADMAP → PLAN)

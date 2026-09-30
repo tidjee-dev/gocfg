@@ -140,6 +140,7 @@ gocfg init [--force] [--dry-run] [--name my-app]
 gocfg env [--env-file .env --example-file .env.example --check]
 gocfg check [--env-file .env --example-file .env.example]
 gocfg diff [--env-file .env --example-file .env.example --defs .gocfg.json]
+gocfg doctor [--env-file .env --example-file .env.example]
 gocfg export [--format shell|dotenv|json]
 gocfg validate [--env-file .env]
 gocfg validate --int APP_PORT --bool APP_DEBUG --required DATABASE_URL
@@ -167,6 +168,10 @@ as-is on your explicit request, so keep the output out of logs.
 `diff` compares manifest (optional), `.env.example` and `.env`
 file-level: missing keys, extras, default drift and secret values.
 Values never print. Exits 1 on missing keys or drift.
+
+`doctor` prints a human diagnostic narrative (toolchain, files, parse
+health, `.gitignore` coverage, duplicates, OS shadowing). Read-only,
+always exits 0 — machine checks with exit codes are `check`'s job.
 
 Exit codes: `0` success, `1` configuration/validation failure,
 `2` CLI usage error.
