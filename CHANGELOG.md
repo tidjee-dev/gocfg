@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 Versioning follows [SemVer](https://semver.org/); API stability is
 promised from `v1.0.0` (see `STABILITY.md`).
 
-## Unreleased
+## v1.2.0 — 2026-09-30
 
 - `gocfg init --with-definitions`: scaffolds `config/vars.go` and
   `tools/gocfg-gen` for the manifest workflow (module path from
