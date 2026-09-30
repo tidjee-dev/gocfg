@@ -17,7 +17,7 @@ var (
 )
 
 func newInitCmd() *cobra.Command {
-	var force, dryRun, gitignore bool
+	var force, dryRun, gitignore, definitions bool
 	var name string
 
 	cmd := &cobra.Command{
@@ -25,7 +25,9 @@ func newInitCmd() *cobra.Command {
 		Short: "Create the initial project structure",
 		Long: `Creates .env, .env.example and config/ in the current directory.
 Existing files are skipped unless --force is given.
-Ensures .env is covered by .gitignore unless --gitignore=false.`,
+Ensures .env is covered by .gitignore unless --gitignore=false.
+With --with-definitions, also scaffolds config/vars.go and
+tools/gocfg-gen for the manifest workflow.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
 			if err != nil {
@@ -36,7 +38,7 @@ Ensures .env is covered by .gitignore unless --gitignore=false.`,
 			}
 			res, err := scaffold.Run(scaffold.Options{
 				Dir: dir, AppName: name, Force: force, DryRun: dryRun,
-				Gitignore: gitignore,
+				Gitignore: gitignore, Definitions: definitions,
 			})
 			if err != nil {
 				return err
@@ -75,6 +77,12 @@ Ensures .env is covered by .gitignore unless --gitignore=false.`,
 			}
 			if !dryRun {
 				fmt.Fprintln(out, "\nProject initialized.")
+				if res.ModuleFallback {
+					fmt.Fprintln(out, "No go.mod found: tools/gocfg-gen uses the example.com/my-app placeholder — fix the import, then run:")
+					fmt.Fprintln(out, "  go run ./tools/gocfg-gen > .gocfg.json")
+				} else if definitions {
+					fmt.Fprintln(out, "Next: go run ./tools/gocfg-gen > .gocfg.json")
+				}
 			}
 			return nil
 		},
@@ -82,6 +90,7 @@ Ensures .env is covered by .gitignore unless --gitignore=false.`,
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite existing files")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be created")
 	cmd.Flags().BoolVar(&gitignore, "gitignore", true, "ensure .env is covered by .gitignore")
+	cmd.Flags().BoolVar(&definitions, "with-definitions", false, "scaffold config/vars.go and tools/gocfg-gen for the manifest workflow")
 	cmd.Flags().StringVar(&name, "name", "", "application name (default: directory name)")
 	return cmd
 }

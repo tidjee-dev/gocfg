@@ -56,6 +56,31 @@ func TestInitGitignoreOptOut(t *testing.T) {
 	}
 }
 
+func TestInitWithDefinitions(t *testing.T) {
+	dir := t.TempDir()
+	chdir(t, dir)
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module example.com/demo\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	root := newRootCmd()
+	var sb strings.Builder
+	root.SetOut(&sb)
+	root.SetArgs([]string{"init", "--with-definitions"})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	for _, rel := range []string{"config/vars.go", "tools/gocfg-gen/main.go"} {
+		if _, err := os.Stat(filepath.Join(dir, rel)); err != nil {
+			t.Fatalf("%s: %v", rel, err)
+		}
+	}
+	out := sb.String()
+	if !strings.Contains(out, "created config/vars.go") || !strings.Contains(out, "gocfg-gen > .gocfg.json") {
+		t.Fatalf("unexpected output:\n%s", out)
+	}
+}
+
 func TestInitSkipsExisting(t *testing.T) {
 	dir := t.TempDir()
 	chdir(t, dir)

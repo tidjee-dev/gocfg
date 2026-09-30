@@ -3,6 +3,7 @@ package scaffold
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -213,4 +214,83 @@ func TestGitignoreDryRun(t *testing.T) {
 		}
 	}
 	t.Fatalf("dry-run must report .gitignore creation: %+v", res.Files)
+}
+
+func TestDefinitionsOffByDefault(t *testing.T) {
+	dir := t.TempDir()
+	res, err := Run(Options{Dir: dir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range res.Files {
+		if f.Path == filepath.Join("config", "vars.go") || strings.HasPrefix(f.Path, filepath.Join("tools")) {
+			t.Fatalf("definitions must be opt-in, got %+v", res.Files)
+		}
+	}
+}
+
+func TestDefinitionsScaffoldsWithModulePath(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module example.com/demo\n\ngo 1.27.1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res, err := Run(Options{Dir: dir, Definitions: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.ModuleFallback {
+		t.Fatal("go.mod present, must not fall back")
+	}
+	vars, err := os.ReadFile(filepath.Join(dir, "config", "vars.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(vars), "func Definitions() []env.Any") {
+		t.Fatalf("vars.go missing Definitions:\n%s", vars)
+	}
+	gen, err := os.ReadFile(filepath.Join(dir, "tools", "gocfg-gen", "main.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(gen), `"example.com/demo/config"`) {
+		t.Fatalf("wrong module path in helper:\n%s", gen)
+	}
+}
+
+func TestDefinitionsFallbackWithoutGoMod(t *testing.T) {
+	dir := t.TempDir()
+	res, err := Run(Options{Dir: dir, Definitions: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.ModuleFallback {
+		t.Fatal("expected module fallback without go.mod")
+	}
+	gen, _ := os.ReadFile(filepath.Join(dir, "tools", "gocfg-gen", "main.go"))
+	if !strings.Contains(string(gen), `"example.com/my-app/config"`) {
+		t.Fatalf("expected placeholder import:\n%s", gen)
+	}
+}
+
+func TestDefinitionsSkipExisting(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := Run(Options{Dir: dir, Definitions: true}); err != nil {
+		t.Fatal(err)
+	}
+	marker := []byte("package config\n")
+	if err := os.WriteFile(filepath.Join(dir, "config", "vars.go"), marker, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res, err := Run(Options{Dir: dir, Definitions: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range res.Files {
+		if f.Path == filepath.Join("config", "vars.go") && !f.Skipped {
+			t.Fatalf("existing vars.go must be skipped: %+v", f)
+		}
+	}
+	if got, _ := os.ReadFile(filepath.Join(dir, "config", "vars.go")); string(got) != string(marker) {
+		t.Fatal("vars.go overwritten")
+	}
 }

@@ -27,6 +27,9 @@ type Options struct {
 	DryRun bool
 	// Gitignore ensures .env is covered by .gitignore.
 	Gitignore bool
+	// Definitions scaffolds config/vars.go and tools/gocfg-gen for the
+	// manifest workflow (opt-in: it duplicates the getter keys as Vars).
+	Definitions bool
 }
 
 // FileResult describes the outcome for one file.
@@ -39,8 +42,13 @@ type FileResult struct {
 
 // Result aggregates a scaffold run.
 type Result struct {
-	Files  []FileResult
+	Files []FileResult
+	// DryRun mirrors Options.DryRun.
 	DryRun bool
+	// ModuleFallback reports the tools helper used the example.com
+	// fallback because no go.mod was found (fix the import, then run
+	// go run ./tools/gocfg-gen > .gocfg.json).
+	ModuleFallback bool
 }
 
 type target struct {
@@ -56,6 +64,30 @@ var targets = []target{
 	{rel: filepath.Join("config", "config.go"), tmpl: "config.go.tmpl", perm: 0o644},
 }
 
+// definitionTargets are appended when Options.Definitions is set.
+var definitionTargets = []target{
+	{rel: filepath.Join("config", "vars.go"), tmpl: "vars.go.tmpl", perm: 0o644},
+	{rel: filepath.Join("tools", "gocfg-gen", "main.go"), tmpl: "gocfg-gen.go.tmpl", perm: 0o644},
+}
+
+// modulePath reads the module path from <dir>/go.mod. The second return
+// is false when no go.mod exists and the example.com fallback is used.
+func modulePath(dir string) (string, bool) {
+	raw, err := os.ReadFile(filepath.Join(dir, "go.mod"))
+	if err != nil {
+		return "example.com/my-app", false
+	}
+	for _, line := range strings.Split(string(raw), "\n") {
+		line = strings.TrimSpace(line)
+		if rest, ok := strings.CutPrefix(line, "module "); ok {
+			if path, _, _ := strings.Cut(strings.TrimSpace(rest), " "); path != "" {
+				return path, true
+			}
+		}
+	}
+	return "example.com/my-app", false
+}
+
 // Run generates the project layout. Writes are atomic (tmp + rename).
 func Run(opts Options) (*Result, error) {
 	if opts.Dir == "" {
@@ -67,7 +99,17 @@ func Run(opts Options) (*Result, error) {
 	data := map[string]string{"AppName": opts.AppName}
 	res := &Result{DryRun: opts.DryRun}
 
-	for _, tg := range targets {
+	all := targets
+	if opts.Definitions {
+		modPath, fromGoMod := modulePath(opts.Dir)
+		data["ModulePath"] = modPath
+		if !fromGoMod {
+			res.ModuleFallback = true
+		}
+		all = append(append([]target{}, targets...), definitionTargets...)
+	}
+
+	for _, tg := range all {
 		content, err := render(tg.tmpl, data)
 		if err != nil {
 			return nil, err

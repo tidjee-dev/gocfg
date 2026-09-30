@@ -169,6 +169,11 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
 
 ## Post-v1 (on tidjee, unreleased)
 
+- [x] `init --with-definitions` (opt-in manifest scaffolding)
+  - `config/vars.go` + `tools/gocfg-gen` templates, module path from
+    `go.mod` (example.com fallback + hint), skip-existing/dry-run
+    aware; cold-scaffold loop verified live (`init` → build →
+    manifest → `env`/`validate --defs`).
 - [x] Scaffold `.gitignore` (default on, `--gitignore=false` opts out)
   - `scaffold.Options.Gitignore`, create/append/skip-if-covered, atomic
     `0644`, dry-run aware; CLI output lines; `t.TempDir()` tests.

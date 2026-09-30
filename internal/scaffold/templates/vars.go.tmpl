@@ -1,0 +1,25 @@
+package config
+
+import "github.com/tidjee-dev/gocfg/env"
+
+// Application variables mirror App() as explicit definitions: the
+// single source of truth the CLI consumes (see Definitions). Pick one
+// style per project — getters in app.go for thin setups, Vars here
+// when driving `gocfg env --defs` / `gocfg validate --defs`.
+var (
+	AppName  = env.StringVar("APP_NAME", "My App")
+	AppEnv   = env.StringVar("APP_ENV", "dev")
+	AppDebug = env.BoolVar("APP_DEBUG", true)
+	AppURL   = env.StringVar("APP_URL", "http://localhost:9000")
+)
+
+// Definitions exposes every configuration variable for tooling.
+// Generate the manifest with: go run ./tools/gocfg-gen > .gocfg.json
+func Definitions() []env.Any {
+	return []env.Any{
+		AppName,
+		AppEnv,
+		AppDebug,
+		AppURL,
+	}
+}

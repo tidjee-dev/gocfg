@@ -136,7 +136,7 @@ if err := gocfg.LoadEnv(); err != nil {
 ## CLI reference
 
 ```bash
-gocfg init [--force] [--dry-run] [--name my-app --gitignore=false]
+gocfg init [--force] [--dry-run] [--name my-app --gitignore=false --with-definitions]
 gocfg env [--env-file .env --example-file .env.example --check]
 gocfg check [--env-file .env --example-file .env.example]
 gocfg diff [--env-file .env --example-file .env.example --defs .gocfg.json]

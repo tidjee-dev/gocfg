@@ -1,0 +1,22 @@
+// Command gocfg-gen publishes the application's Definitions as the
+// JSON manifest the CLI consumes:
+//
+//	go run ./tools/gocfg-gen > .gocfg.json
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"{{.ModulePath}}/config"
+	"github.com/tidjee-dev/gocfg/env"
+)
+
+func main() {
+	raw, err := env.MarshalDefinitions(config.Definitions())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println(string(raw))
+}
