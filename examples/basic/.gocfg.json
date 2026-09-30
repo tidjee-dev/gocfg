@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "vars": [
+    {
+      "key": "APP_NAME",
+      "kind": "string",
+      "default": "My App"
+    },
+    {
+      "key": "APP_ENV",
+      "kind": "string",
+      "default": "dev"
+    },
+    {
+      "key": "APP_DEBUG",
+      "kind": "bool",
+      "default": "true"
+    },
+    {
+      "key": "APP_URL",
+      "kind": "string",
+      "default": "http://localhost:9000"
+    },
+    {
+      "key": "DATABASE_URL",
+      "kind": "string",
+      "default": "postgres://localhost:5432/myapp"
+    },
+    {
+      "key": "DATABASE_MAX_CONNS",
+      "kind": "int",
+      "default": "10"
+    }
+  ]
+}
