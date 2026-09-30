@@ -98,10 +98,15 @@ if err := gocfg.LoadEnv(); err != nil {
 
 ```bash
 gocfg init [--force] [--dry-run] [--name my-app]
+gocfg env [--env-file .env --example-file .env.example --check]
 gocfg validate [--env-file .env]
 gocfg validate --int APP_PORT --bool APP_DEBUG --required DATABASE_URL
 gocfg version
 ```
+
+`env` ensures `.env` contains every `.env.example` key (appended with
+example values, empty for secrets); existing content is never touched.
+`--check` reports without writing (exit 1 when out of sync).
 
 With no flags, `validate` checks every key declared in `.env.example`
 (OS > `.env`), warns about extra `.env` keys, and fails on missing or

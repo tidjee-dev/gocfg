@@ -6,6 +6,10 @@ promised before `v1.0.0`.
 
 ## Unreleased
 
+- `gocfg env [--check]`: completes `.env` from `.env.example`
+  (append-missing-only, secrets appended empty, extras warn, exit 1
+  on change in `--check` mode).
+
 - `env.Var[T]` definitions: `StringVar`, `BoolVar`, `IntVar`, `Int64Var`,
   `Float64Var`, `DurationVar` with `Secret()` / `Require()` options,
   `Resolve()` (`OS > .env > Default`, empty counts as unset), and the

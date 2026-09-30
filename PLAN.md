@@ -101,10 +101,14 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - README definitions section, CHANGELOG Unreleased entry.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
-- [ ] S10 `gocfg env` (M9)
-  - Discover `Definitions()`; append-missing-only merge (preserve values,
-    comments, order), atomic write; secrets empty in `.env.example`.
-  - `--force` only where appropriate. Tests.
+- [x] S10 `gocfg env` (M9, reshaped: file-driven, not Definitions discovery)
+  - `.env.example` is the schema (same model as validate-all): append missing
+    keys with example values (empty for secrets, with warning), create
+    missing `.env` (`0600`), never touch values/comments/order, atomic
+    write preserving existing mode, extras warn only.
+  - `--env-file/--example-file/--check` (`--check` exits 1 when out of sync).
+  - `internal/envsync` core + cobra wiring, README + CHANGELOG.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 - [ ] S11 `gocfg check` (M10)
   - Shallow static check (files exist, `.env` parses, keys present vs
