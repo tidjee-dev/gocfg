@@ -34,8 +34,9 @@ func Parse(src []byte) (map[string]string, error) {
 
 	flush := func(lineNo int) error {
 		raw := strings.Join(contLines, "\n")
-		// strip closing quote on last line
-		idx := strings.LastIndex(raw, `"`)
+		// The closer is the first unescaped quote; anything after it
+		// must be empty or a comment.
+		idx := indexUnescapedQuote(raw)
 		if idx < 0 {
 			return &ParseError{Line: contStart, Msg: "unterminated double-quoted value"}
 		}
@@ -67,11 +68,9 @@ func Parse(src []byte) (map[string]string, error) {
 		if t == "" || strings.HasPrefix(t, "#") {
 			continue
 		}
-		// export prefix
-		if strings.HasPrefix(t, "export ") || strings.HasPrefix(t, "export\t") {
-			t = strings.TrimSpace(strings.TrimPrefix(t, "export"))
-			// TrimPrefix with "export" leaves rest; re-trim:
-			t = strings.TrimSpace(trimExportPrefix(line))
+		// export prefix (only when followed by space/tab, so `exported=1` is a key)
+		if rest, ok := cutExportPrefix(t); ok {
+			t = strings.TrimSpace(rest)
 		}
 		eq := strings.Index(t, "=")
 		if eq < 0 {
@@ -90,16 +89,20 @@ func Parse(src []byte) (map[string]string, error) {
 		}
 		switch rawVal[0] {
 		case '"':
-			if len(rawVal) >= 2 && strings.HasSuffix(rawVal, `"`) && !strings.HasSuffix(rawVal, `\"`) && countUnescaped(rawVal) >= 2 {
-				inner := rawVal[1 : len(rawVal)-1]
-				out[key] = expand(unescapeDouble(inner), out)
+			body := rawVal[1:]
+			if idx := indexUnescapedQuote(body); idx >= 0 {
+				// Single-line (may carry a trailing comment).
+				trailer := strings.TrimSpace(body[idx+1:])
+				if trailer != "" && !strings.HasPrefix(trailer, "#") {
+					return nil, &ParseError{Line: no, Msg: "unexpected content after closing quote"}
+				}
+				out[key] = expand(unescapeDouble(body[:idx]), out)
 			} else {
-				// start multiline
+				// Start multiline; stays open until first unescaped quote.
 				inML = true
 				contKey = key
 				contStart = no
-				contLines = []string{rawVal[1:]} // after opening quote
-				// single-line "abc (unterminated on same line) stays open
+				contLines = []string{body}
 			}
 		case '\'':
 			end := strings.Index(rawVal[1:], "'")
@@ -124,12 +127,15 @@ func Parse(src []byte) (map[string]string, error) {
 	return out, nil
 }
 
-func trimExportPrefix(line string) string {
-	t := strings.TrimSpace(line)
-	if strings.HasPrefix(t, "export") {
-		return strings.TrimSpace(t[len("export"):])
+func cutExportPrefix(s string) (string, bool) {
+	if !strings.HasPrefix(s, "export") {
+		return s, false
 	}
-	return t
+	rest := s[len("export"):]
+	if rest == "" || rest[0] != ' ' && rest[0] != '\t' {
+		return s, false
+	}
+	return rest, true
 }
 
 func validKey(k string) bool {
@@ -161,10 +167,12 @@ func unescapeDouble(s string) string {
 	return r.Replace(s)
 }
 
-func countUnescaped(s string) int {
-	n := 0
+// indexUnescapedQuote returns the byte index of the first unescaped
+// double quote in s, or -1 if there is none.
+func indexUnescapedQuote(s string) int {
 	esc := false
-	for _, c := range s {
+	for i := 0; i < len(s); i++ {
+		c := s[i]
 		if esc {
 			esc = false
 			continue
@@ -174,32 +182,14 @@ func countUnescaped(s string) int {
 			continue
 		}
 		if c == '"' {
-			n++
+			return i
 		}
 	}
-	return n
+	return -1
 }
 
 func isClosedMultiline(parts []string) bool {
-	joined := strings.Join(parts, "\n")
-	// odd number of unescaped trailing quotes on last segment closes it
-	esc := false
-	quotes := 0
-	for _, c := range joined {
-		if esc {
-			esc = false
-			continue
-		}
-		if c == '\\' {
-			esc = true
-			continue
-		}
-		if c == '"' {
-			quotes++
-		}
-	}
-	// first line's opening quote already consumed, so we need >=1 close
-	return quotes >= 1
+	return indexUnescapedQuote(strings.Join(parts, "\n")) >= 0
 }
 
 // expand supports $VAR and ${VAR} against OS env first, then already-parsed keys.

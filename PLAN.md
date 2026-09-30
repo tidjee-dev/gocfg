@@ -26,12 +26,16 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
     `isClosedMultiline` over-counts quotes.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, dotenv tests pass).
 
-- [ ] S1 dotenv harden (ROADMAP M1)
+- [x] S1 dotenv harden (ROADMAP M1)
   - `internal/dotenv`: quotes/multiline/escapes, `export`, `${VAR}` OS-first
     expansion, whitespace, last-wins, malformed → `*ParseError` with line no.
   - `loader.go`: default `.env` missing = nil, explicit missing = error,
     never override OS, multi-path.
   - Tests: table tests + godotenv parity fixtures + `loader_test.go`.
+  - Fixed: export double-trim → `cutExportPrefix`; quote closing now
+    first-unescaped-quote (single-line trailing comments work, multiline
+    `LastIndex` mis-close fixed); removed `countUnescaped`.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 - [ ] S2 env getters + errors (ROADMAP M2)
   - `env/*.go`: `String, Bool, Int, Int64, Float64, Duration, Required`,
