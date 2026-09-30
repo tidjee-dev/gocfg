@@ -490,9 +490,12 @@ The loader must support:
 - `export KEY=value` prefix
 - `${VAR}` / `$VAR` expansion against OS env + earlier keys
 - whitespace trimming around key, `=`, unquoted values
+- keys: ASCII `[A-Za-z_][A-Za-z0-9_.-]*` (no leading digit, no `:` separator)
+- single-quoted multiline values (literal, like double-quoted)
 - duplicate keys: last wins (documented, tested)
 - malformed line: return error with line number, do not silently skip
-- parity tests against `godotenv` fixtures
+- parity: `internal/dotenv/testdata/godotenv-*.env` snapshots with per-fixture
+  expectations; documented deltas (OS-first expansion, `\t` → tab)
 
 Typical:
 
@@ -507,8 +510,7 @@ The loader should support (see list above) plus environment precedence:
 
 - `LoadEnv` populates only keys not already present in OS env
   (`OS > .env > Go default` is enforced by never overriding OS).
-- `LoadEnv(path ...string)` with `Override: true` option is the only
-  way to force override, for tests.
+  Tests use `t.Setenv`; no override API is provided.
 
 # 13. `.env` Loading
 
@@ -594,8 +596,12 @@ Requirements:
 
 # 16. Config-Driven Environment Generation
 
-Deferred to v0.2 (thin v0.1 ships static `init` only). When implemented,
-the CLI inspects `Definitions() []env.Any` and generates:
+`gocfg env` completes `.env` from `.env.example` (the file-level schema,
+same model as validate-all). `Var[T]` definitions (§15) are the Go-side
+source of truth for application code; a manifest bridge from
+`Definitions()` to the CLI remains possible future work.
+
+The CLI inspects the example file and generates/updates:
 
 ```text
 .env
@@ -637,8 +643,8 @@ Rules:
 - append only missing keys at end as `KEY=default`
 - never modify existing values, comments, blank lines, or order
 - never delete keys (report extras via `check` instead)
-- write atomically (tmp file + rename), preserve `0600` if exists
-- deferred to v0.2 (thin v0.1 ships static `init` only)
+- write atomically (tmp file + rename), new files `0600`, existing
+  permissions preserved across the rename
 
 Existing:
 
@@ -959,23 +965,30 @@ gocfg check
 Configuration looks consistent.
 ```
 
-`check` inspects and reports. Exit 1 on missing/unparseable. Deferred
-to v0.2 in thin v0.1 slice; `validate` ships first.
+`check` inspects and reports. Exit 1 on missing/unparseable.
+Shipped in v0.2 alongside `validate` (values) — see §26 for the split.
 
 # 26. `gocfg validate`
 
-Decided: `validate` = deep runtime validation. Ships in v0.1.
+`validate` checks values (deep), `check` checks structure (shallow, §25).
+
+With no flags, every key declared in `.env.example` must resolve to a
+non-empty value (`Required` semantics, `OS > .env`); extras warn.
+With flags, the given typed specs are resolved instead:
 
 ```bash
 gocfg validate
+gocfg validate --int APP_PORT --bool APP_DEBUG --required DATABASE_URL
 ```
 
-Steps:
+Steps (no-flag mode):
 
-1. `LoadEnv()` (no override)
-2. typed resolve of every var (`Int/Bool/Duration/...` return errors)
-3. `Required` checks
-4. app `Config.Validate() error` for domain rules
+1. `LoadEnv()` (no override; malformed `.env` fails)
+2. `Required` check per schema key
+3. extras reported as warnings
+
+No app `Config` import: domain rules stay in user code
+(`Config.Validate()` in `examples/basic`).
 
 Example:
 
@@ -1368,76 +1381,62 @@ Decided order: core first, then CLI. Thin v0.1 = M0–M7. M8–M10 deferred to v
 - [ ] Remove unnecessary abstractions
 - [ ] Freeze v0.1 API
 
-## M8 — Configuration Definitions (v0.2)
+## M8 — Configuration Definitions (v0.2: done)
 
-- [ ] `Var[T]{Key, Default, Secret, Parse}` + `Resolve() (T, error)`
-- [ ] `Definitions() []Any` explicit list, no globals, no AST parsing
-- [ ] Support defaults, types, required, `Secret()` opt
-- [ ] Add definition tests
+- [x] `Var[T]{Key, Default, Kind, Secret, Required, Parse}` + `Resolve() (T, error)`
+- [x] `Definitions() []Any` explicit list, no globals, no AST parsing
+- [x] Defaults, types, required (`Require()` opt), `Secret()` opt
+- [x] Definition tests (precedence, empty≡unset, redaction, `Any` conformance)
 
-## M9 — Config-Driven `.env` (v0.2)
+## M9 — Config-Driven `.env` (v0.2: done, file-driven)
 
-Implement:
+`gocfg env` completes `.env` from `.env.example` (the file-level schema;
+`Var[T]` remains the Go-side API — no app import, no manifest).
 
-```bash
-gocfg env
-```
+- [x] Read schema from `.env.example`
+- [x] Generate missing `.env` (`0600`)
+- [x] Append-missing-only merge, atomic write, preserve comments/order/mode
+- [x] Add new variables (example values; secrets appended empty)
+- [x] Handle secrets safely (redacted warnings, empty in `.env`)
+- [x] Tests (incl. failed-write atomicity)
+- [x] `--check` instead of `--force` (reports without writing)
 
-- [ ] Discover `Definitions()`
-- [ ] Generate missing `.env` / `.env.example`
-- [ ] Append-missing-only merge, atomic write, preserve comments/order
-- [ ] Handle secrets safely (empty in example)
-- [ ] Add tests
-- [ ] Add `--force` only where appropriate
+## M10 — `gocfg check` (v0.2: done)
 
-## M10 — `gocfg check` (v0.2)
+- [x] Shallow static check: files exist, `.env` parses, keys present
+- [x] Missing keys fail, extras as warnings
+- [x] No type coercion (that's `validate`)
+- [x] Exit codes 0/1/2
+- [x] Tests (incl. OS-satisfies-without-file, empty-counts-present)
 
-- [ ] Shallow static check: files exist, `.env` parses, keys present
-- [ ] Missing/extra vs `.env.example` as warnings
-- [ ] No type coercion (that's `validate`)
-- [ ] Define exit codes
-- [ ] Add tests
+## M11 — Hardening (v0.2: done)
 
-## M11 — Hardening (v0.2+)
+- [x] Audit secret handling, error messages, permissions
+- [x] Review overwrite behavior, exit codes
+- [x] Test malformed files, unusual values, partial writes
+- [x] Vendored godotenv fixtures for parser parity
 
-- [ ] Audit secret handling, error messages, permissions
-- [ ] Review overwrite behavior, exit codes
-- [ ] Test malformed files, unusual values, partial writes
+# 36. Release Scope
 
-# 36. v0.1.0 Scope
+v0.1.0 shipped the thin slice (loader, typed getters, `init`,
+flag-spec `validate`, `version`). v0.2.0 adds:
 
-Decided (MCQ): thin slice. `env sync` (`gocfg env`), `check`, and
-`Var[T]` definitions move to v0.2.
+### Core (v0.2)
 
-The first useful release contains:
+- `Var[T]` definitions (`StringVar`, `BoolVar`, `IntVar`, `Int64Var`,
+  `Float64Var`, `DurationVar`) with `Secret()` / `Require()` options
+- `Resolve()` (`OS > .env > Default`, empty counts as unset)
+- `Any` interface for CLI consumption
+- single-quoted multiline values; `-`/`.` allowed in keys (non-leading)
 
-### Core (v0.1)
-
-- `.env` loader (godotenv-compat, line-number errors, last-wins)
-- environment lookup (`OS > .env > default`, no OS override)
-- precedence handling
-- `String`
-- `Bool` (strict sets above)
-- `Int`
-- `Int64`
-- `Float64`
-- `Duration` (`time.ParseDuration`)
-- required values (`Required` returning error)
-- configuration errors (contextual, secret-redacted via flag + heuristic)
-
-### CLI (v0.1)
+### CLI (v0.2)
 
 ```bash
 gocfg init
-gocfg validate
+gocfg env        # file-driven sync from .env.example (+ --check)
+gocfg check      # shallow static health
+gocfg validate   # no-flag schema presence + typed flag specs
 gocfg version
-```
-
-Deferred to v0.2:
-
-```bash
-gocfg env     # needs Definitions() API
-gocfg check   # shallow check, after env sync design settles
 ```
 
 ### Scaffold

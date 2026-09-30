@@ -117,11 +117,16 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - `internal/cli/check.go` + tests, README split documented.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
-- [ ] S12 hardening + roadmap sync (M11)
-  - Secret-handling audit, unusual values, partial writes.
-  - Vendor godotenv fixtures for parser parity (closes S1 NOTE).
-  - Fix ROADMAP staleness: §26 (validate-all default), §32 (drop `env`
-    from quickstart until S10), §13 (implement or drop `Override` option).
+- [x] S12 hardening + roadmap sync + v0.2.0 (M11)
+  - Vendored godotenv fixtures (`testdata/godotenv-*.env` + attribution) with
+    per-fixture parity tests; closes S1 NOTE. Parser gaps closed:
+    single-quoted multiline, `-`/`.` in keys. Deltas documented in code:
+    OS-first expansion, `\t` → tab, no `:` separator.
+  - Secret/write safety: warning-text redaction, failed-write atomicity
+    (original intact, no stray tmps, mode preserved).
+  - ROADMAP sync: §26 (actual validate), §13 (`Override` dropped),
+    §16/§17/§25/§36 (shipped scope), M8–M11 + §30 checked.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 ## Traceability (ROADMAP → PLAN)
 

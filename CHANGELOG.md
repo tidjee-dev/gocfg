@@ -4,20 +4,15 @@ All notable changes to this project are documented here.
 Versioning follows [SemVer](https://semver.org/); no API stability is
 promised before `v1.0.0`.
 
-## Unreleased
+## v0.2.0 — 2026-09-30
 
-- `gocfg check`: static health inspection (`config/` exists, files parse,
-  schema keys present in `.env` or OS with empty counting as present);
-  no env mutation, no type coercion; exit 1 on missing/unparseable.
-- `gocfg env [--check]`: completes `.env` from `.env.example`
-  (append-missing-only, secrets appended empty, extras warn, exit 1
-  on change in `--check` mode).
-
-- `env.Var[T]` definitions: `StringVar`, `BoolVar`, `IntVar`, `Int64Var`,
-  `Float64Var`, `DurationVar` with `Secret()` / `Require()` options,
-  `Resolve()` (`OS > .env > Default`, empty counts as unset), and the
-  `Any` interface (`AnyKey`, `AnyDefault`, `AnyKind`, `IsSecret`,
-  `IsRequired`) for CLI consumption. Getters now share the same parsers.
+- `env.Var[T]` definitions (`StringVar`, `BoolVar`, `IntVar`, `Int64Var`,
+  `Float64Var`, `DurationVar`, `Secret()` / `Require()`, `Resolve()`,
+  `Any` interface).
+- `gocfg env [--check]`: completes `.env` from `.env.example`.
+- `gocfg check`: static health inspection.
+- Parser: single-quoted multiline values, `-`/`.` in keys (non-leading),
+  vendored godotenv fixtures with documented deltas.
 
 ## v0.1.0 — 2026-09-30
 
@@ -45,5 +40,3 @@ CLI (`cobra`, isolated from core):
 - `gocfg version` (ldflags-injectable).
 
 Docs: README, `examples/basic` end-to-end application.
-
-Deferred to v0.2: `Var[T]` definitions, `gocfg env`, `gocfg check`.

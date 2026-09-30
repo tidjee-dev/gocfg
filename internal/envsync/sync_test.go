@@ -76,7 +76,7 @@ func TestNoTrailingNewline(t *testing.T) {
 func TestSecretsAppendedEmptyWithWarning(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, ".env", "A=1\n", 0o600)
-	writeFile(t, dir, ".env.example", "A=1\nDB_PASSWORD=hunter2\nAPI_KEY=abc\n", 0o644)
+	writeFile(t, dir, ".env.example", "A=1\nDB_PASSWORD=hunter2\nAPI_KEY=sk-live-42\n", 0o644)
 	res, err := Run(Options{EnvFile: filepath.Join(dir, ".env"), ExampleFile: filepath.Join(dir, ".env.example")})
 	if err != nil {
 		t.Fatal(err)
@@ -85,8 +85,13 @@ func TestSecretsAppendedEmptyWithWarning(t *testing.T) {
 	if !strings.Contains(got, "DB_PASSWORD=\n") || !strings.Contains(got, "API_KEY=\n") {
 		t.Fatalf("secrets must be appended empty:\n%s", got)
 	}
-	if strings.Contains(got, "hunter2") || strings.Contains(got, "API_KEY=abc") {
+	if strings.Contains(got, "hunter2") || strings.Contains(got, "sk-live-42") {
 		t.Fatalf("secret value leaked into .env:\n%s", got)
+	}
+	for _, w := range res.Warnings {
+		if strings.Contains(w, "hunter2") || strings.Contains(w, "sk-live-42") {
+			t.Fatalf("secret value leaked into warning: %q", w)
+		}
 	}
 	if len(res.Warnings) != 2 {
 		t.Fatalf("expected 2 secret warnings, got %+v", res.Warnings)
@@ -158,5 +163,30 @@ func TestExistingModePreserved(t *testing.T) {
 	}
 	if fi, _ := os.Stat(filepath.Join(dir, ".env")); fi.Mode().Perm() != 0o640 {
 		t.Fatalf(".env perm changed to %o", fi.Mode().Perm())
+	}
+}
+
+func TestFailedWriteLeavesOriginalIntact(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, ".env", "A=1\n", 0o600)
+	writeFile(t, dir, ".env.example", "A=1\nB=2\n", 0o644)
+	// Read-only dir: temp file creation fails, original must survive
+	// with no stray temp files left behind.
+	if err := os.Chmod(dir, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o755) })
+	if _, err := Run(Options{EnvFile: filepath.Join(dir, ".env"), ExampleFile: filepath.Join(dir, ".env.example")}); err == nil {
+		t.Fatal("expected error for unwritable dir")
+	}
+	if got := readFile(t, dir, ".env"); got != "A=1\n" {
+		t.Fatalf("original modified: %q", got)
+	}
+	leftovers, err := filepath.Glob(filepath.Join(dir, ".gocfg-*"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(leftovers) != 0 {
+		t.Fatalf("stray temp files: %v", leftovers)
 	}
 }

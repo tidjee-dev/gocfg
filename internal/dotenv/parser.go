@@ -1,4 +1,8 @@
 // Package dotenv parses .env files (godotenv-compatible behavior, stdlib only).
+//
+// Documented deltas from joho/godotenv: keys are ASCII `[A-Za-z_][A-Za-z0-9_.-]*`
+// (no leading digit, no `:` separator); `${VAR}` expansion prefers OS env over
+// earlier file keys (matching OS > .env precedence); `\t` maps to tab.
 package dotenv
 
 import (
@@ -29,6 +33,7 @@ func Parse(src []byte) (map[string]string, error) {
 		contKey   string
 		contLines []string
 		contStart int
+		contQuote byte
 		inML      bool
 	)
 
@@ -36,17 +41,21 @@ func Parse(src []byte) (map[string]string, error) {
 		raw := strings.Join(contLines, "\n")
 		// The closer is the first unescaped quote; anything after it
 		// must be empty or a comment.
-		idx := indexUnescapedQuote(raw)
+		idx := indexUnescaped(contQuote, raw)
 		if idx < 0 {
-			return &ParseError{Line: contStart, Msg: "unterminated double-quoted value"}
+			return &ParseError{Line: contStart, Msg: "unterminated quoted value"}
 		}
 		inner := raw[:idx]
 		trailer := strings.TrimSpace(raw[idx+1:])
 		if trailer != "" && !strings.HasPrefix(trailer, "#") {
 			return &ParseError{Line: lineNo, Msg: "unexpected content after closing quote"}
 		}
-		v := unescapeDouble(inner)
-		out[contKey] = expand(v, out)
+		if contQuote == '"' {
+			inner = unescapeDouble(inner)
+			inner = expand(inner, out)
+		}
+		// Single-quoted values stay literal: no escapes, no expansion.
+		out[contKey] = inner
 		inML = false
 		contLines = nil
 		return nil
@@ -56,7 +65,7 @@ func Parse(src []byte) (map[string]string, error) {
 		no := i + 1
 		if inML {
 			contLines = append(contLines, line)
-			if isClosedMultiline(contLines) {
+			if isClosedMultiline(contQuote, contLines) {
 				if err := flush(no); err != nil {
 					return nil, err
 				}
@@ -90,7 +99,7 @@ func Parse(src []byte) (map[string]string, error) {
 		switch rawVal[0] {
 		case '"':
 			body := rawVal[1:]
-			if idx := indexUnescapedQuote(body); idx >= 0 {
+			if idx := indexUnescaped('"', body); idx >= 0 {
 				// Single-line (may carry a trailing comment).
 				trailer := strings.TrimSpace(body[idx+1:])
 				if trailer != "" && !strings.HasPrefix(trailer, "#") {
@@ -100,21 +109,27 @@ func Parse(src []byte) (map[string]string, error) {
 			} else {
 				// Start multiline; stays open until first unescaped quote.
 				inML = true
+				contQuote = '"'
 				contKey = key
 				contStart = no
 				contLines = []string{body}
 			}
 		case '\'':
-			end := strings.Index(rawVal[1:], "'")
-			if end < 0 {
-				return nil, &ParseError{Line: no, Msg: "unterminated single-quoted value"}
+			body := rawVal[1:]
+			if idx := indexUnescaped('\'', body); idx >= 0 {
+				trailer := strings.TrimSpace(body[idx+1:])
+				if trailer != "" && !strings.HasPrefix(trailer, "#") {
+					return nil, &ParseError{Line: no, Msg: "unexpected content after closing quote"}
+				}
+				out[key] = body[:idx] // no escape, no expansion in single quotes
+			} else {
+				// Start single-quoted multiline (literal, like godotenv).
+				inML = true
+				contQuote = '\''
+				contKey = key
+				contStart = no
+				contLines = []string{body}
 			}
-			v := rawVal[1 : 1+end]
-			trailer := strings.TrimSpace(rawVal[1+end+1:])
-			if trailer != "" && !strings.HasPrefix(trailer, "#") {
-				return nil, &ParseError{Line: no, Msg: "unexpected content after closing quote"}
-			}
-			out[key] = v // no escape, no expansion in single quotes
 		default:
 			// unquoted: strip inline comment " #..."
 			v := stripInlineComment(rawVal)
@@ -122,7 +137,7 @@ func Parse(src []byte) (map[string]string, error) {
 		}
 	}
 	if inML {
-		return nil, &ParseError{Line: contStart, Msg: "unterminated double-quoted value"}
+		return nil, &ParseError{Line: contStart, Msg: "unterminated quoted value"}
 	}
 	return out, nil
 }
@@ -143,10 +158,12 @@ func validKey(k string) bool {
 		return false
 	}
 	for i, c := range k {
-		if c == '_' || c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || (i > 0 && c >= '0' && c <= '9') {
-			continue
+		switch {
+		case c == '_' || c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z':
+		case i > 0 && (c >= '0' && c <= '9' || c == '-' || c == '.'):
+		default:
+			return false
 		}
-		return false
 	}
 	return true
 }
@@ -167,9 +184,10 @@ func unescapeDouble(s string) string {
 	return r.Replace(s)
 }
 
-// indexUnescapedQuote returns the byte index of the first unescaped
-// double quote in s, or -1 if there is none.
-func indexUnescapedQuote(s string) int {
+// indexUnescaped returns the byte index of the first unescaped
+// occurrence of q in s (a quote preceded by an odd number of
+// backslashes does not count), or -1 if there is none.
+func indexUnescaped(q byte, s string) int {
 	esc := false
 	for i := 0; i < len(s); i++ {
 		c := s[i]
@@ -181,15 +199,15 @@ func indexUnescapedQuote(s string) int {
 			esc = true
 			continue
 		}
-		if c == '"' {
+		if c == q {
 			return i
 		}
 	}
 	return -1
 }
 
-func isClosedMultiline(parts []string) bool {
-	return indexUnescapedQuote(strings.Join(parts, "\n")) >= 0
+func isClosedMultiline(q byte, parts []string) bool {
+	return indexUnescaped(q, strings.Join(parts, "\n")) >= 0
 }
 
 // expand supports $VAR and ${VAR} against OS env first, then already-parsed keys.
