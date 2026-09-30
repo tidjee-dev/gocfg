@@ -190,5 +190,7 @@ Exit codes: `0` success, `1` configuration/validation failure,
 
 ## Status
 
-v0.1: `.env` loader, typed getters, `init`, `validate`, `version`.
+v1.0.0: full surface — loader, typed getters + extra types, `Var[T]`
+definitions, manifest bridge, `init`, `env`, `check`, `export`, `diff`,
+`doctor`, `validate`, `version`. API frozen per `STABILITY.md`.
 See `ROADMAP.md` and `PLAN.md`.

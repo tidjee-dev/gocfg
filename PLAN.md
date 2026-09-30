@@ -161,7 +161,11 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
     `.gitignore` coverage, duplicate keys, OS shadowing, example
     secrets); always exits 0. `internal/cli/doctor.go` + tests.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
-- [ ] S18 v1 close-out (STABILITY.md, docs, gate, tag v1.0.0)
+- [x] S18 v1 close-out (STABILITY.md, docs, gate, tag v1.0.0)
+  - `STABILITY.md` frozen surface; `Required`/`Require()` documented as-is;
+    README Status, ROADMAP §34/§36, CHANGELOG `v1.0.0`.
+  - Full gate + dep-boundary + secret audit + live smoke of all commands.
+  - Done: 2026-09-30.
 
 ## Traceability (ROADMAP → PLAN)
 

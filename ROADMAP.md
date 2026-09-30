@@ -1296,16 +1296,17 @@ Initial target:
 v0.1.0
 ```
 
-Potential release progression:
+Release progression (all shipped):
 
 ```text
 v0.1.0
 v0.2.0
-v0.3.0
+v0.2.1
+v0.2.2
 v1.0.0
 ```
 
-Avoid promising API stability before `v1.0.0`.
+API stability is promised from `v1.0.0` — see `STABILITY.md`.
 
 # 35. Milestones
 

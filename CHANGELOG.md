@@ -1,10 +1,12 @@
 # Changelog
 
 All notable changes to this project are documented here.
-Versioning follows [SemVer](https://semver.org/); no API stability is
-promised before `v1.0.0`.
+Versioning follows [SemVer](https://semver.org/); API stability is
+promised from `v1.0.0` (see `STABILITY.md`).
 
-## Unreleased
+## v1.0.0 — 2026-09-30
+
+First stable release. Everything below is frozen per `STABILITY.md`.
 
 - `gocfg doctor`: read-only diagnostic narrative (toolchain, files,
   parse health, `.gitignore` coverage, duplicates, OS shadowing);
