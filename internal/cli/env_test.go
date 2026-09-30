@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tidjee-dev/gocfg/env"
 )
 
 func TestEnvSyncsMissing(t *testing.T) {
@@ -68,6 +70,32 @@ func TestEnvInSyncIsQuietSuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.Contains(sb.String(), "in sync") {
+		t.Fatalf("unexpected output:\n%s", sb.String())
+	}
+}
+
+func TestEnvDefsGenerates(t *testing.T) {
+	dir := t.TempDir()
+	m := writeManifest(t, dir, []env.Any{
+		env.StringVar("GOCFG_EM_NAME", "My App"),
+		env.StringVar("GOCFG_EM_PASSWORD", "s3cr3t", env.Secret()),
+	})
+	p := filepath.Join(dir, ".env")
+	chdir(t, dir)
+
+	root := newRootCmd()
+	var sb strings.Builder
+	root.SetOut(&sb)
+	root.SetArgs([]string{"env", "--env-file", p, "--defs", m})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(p)
+	// Manifest order preserved, secret appended empty.
+	if string(b) != "GOCFG_EM_NAME=My App\nGOCFG_EM_PASSWORD=\n" {
+		t.Fatalf("unexpected .env: %q", b)
+	}
+	if !strings.Contains(sb.String(), "created "+p) {
 		t.Fatalf("unexpected output:\n%s", sb.String())
 	}
 }

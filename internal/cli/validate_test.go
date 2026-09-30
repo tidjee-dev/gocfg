@@ -6,7 +6,22 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tidjee-dev/gocfg/env"
 )
+
+func writeManifest(t *testing.T, dir string, defs []env.Any) string {
+	t.Helper()
+	raw, err := env.MarshalDefinitions(defs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := filepath.Join(dir, ".gocfg.json")
+	if err := os.WriteFile(p, raw, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
 
 func writeEnv(t *testing.T, content string) string {
 	t.Helper()
@@ -175,5 +190,38 @@ func TestValidateAllExtraWarns(t *testing.T) {
 	}
 	if !strings.Contains(out, "! GOCFG_VF_EXTRA (not in .env.example)") {
 		t.Fatalf("missing extra warning in:\n%s", out)
+	}
+}
+
+func TestValidateDefsTyped(t *testing.T) {
+	dir := t.TempDir()
+	m := writeManifest(t, dir, []env.Any{
+		env.IntVar("GOCFG_VD_PORT", 9000),
+		env.BoolVar("GOCFG_VD_DEBUG", false),
+		env.StringVar("GOCFG_VD_REQ", "", env.Require()),
+	})
+	p := filepath.Join(dir, ".env")
+	writeNamedEnv(t, dir, ".env", "GOCFG_VD_PORT=not-a-number\nGOCFG_VD_DEBUG=true\n", 0o600)
+	out, err := runValidate(t, dir, "validate", "--env-file", p, "--defs", m)
+	var ee *ExitError
+	if !errors.As(err, &ee) || ee.Code != 1 {
+		t.Fatalf("expected ExitError{1}, got %v\nout:\n%s", err, out)
+	}
+	for _, want := range []string{"✗ GOCFG_VD_PORT", "✓ GOCFG_VD_DEBUG", "✗ GOCFG_VD_REQ"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %q in:\n%s", want, out)
+		}
+	}
+}
+
+func TestValidateDefsUnknownKind(t *testing.T) {
+	dir := t.TempDir()
+	m := filepath.Join(dir, ".gocfg.json")
+	os.WriteFile(m, []byte(`{"version":1,"vars":[{"key":"GOCFG_VK","kind":"future"}]}`), 0o644)
+	p := filepath.Join(dir, ".env")
+	writeNamedEnv(t, dir, ".env", "GOCFG_VK=x\n", 0o600)
+	out, err := runValidate(t, dir, "validate", "--env-file", p, "--defs", m)
+	if err == nil || !strings.Contains(out, "unsupported kind") {
+		t.Fatalf("expected unsupported-kind error, got %v\nout:\n%s", err, out)
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tidjee-dev/gocfg/env"
 )
 
 func writeFile(t *testing.T, dir, name, content string, perm os.FileMode) {
@@ -188,5 +190,59 @@ func TestFailedWriteLeavesOriginalIntact(t *testing.T) {
 	}
 	if len(leftovers) != 0 {
 		t.Fatalf("stray temp files: %v", leftovers)
+	}
+}
+
+func TestRunDefsPreservesManifestOrder(t *testing.T) {
+	dir := t.TempDir()
+	defs := []env.Definition{
+		{Key: "GOCFG_D_ZULU", Kind: "string", Default: "z"},
+		{Key: "GOCFG_D_ALPHA", Kind: "int", Default: "1"},
+		{Key: "GOCFG_D_MIKE", Kind: "string", Default: "m"},
+	}
+	res, err := RunDefs(Options{EnvFile: filepath.Join(dir, ".env")}, defs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.Created || len(res.Added) != 3 {
+		t.Fatalf("unexpected result: %+v", res)
+	}
+	got := readFile(t, dir, ".env")
+	want := "GOCFG_D_ZULU=z\nGOCFG_D_ALPHA=1\nGOCFG_D_MIKE=m\n"
+	if got != want {
+		t.Fatalf("manifest order not preserved:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestRunDefsSecretsAndRequiredEmpty(t *testing.T) {
+	dir := t.TempDir()
+	defs := []env.Definition{
+		{Key: "GOCFG_DD_PLAIN", Kind: "string", Default: "v"},
+		{Key: "GOCFG_DD_PASSWORD", Kind: "string", Default: "hunter2"},
+		{Key: "GOCFG_DD_REQ", Kind: "int", Required: true},
+	}
+	res, err := RunDefs(Options{EnvFile: filepath.Join(dir, ".env")}, defs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := readFile(t, dir, ".env")
+	want := "GOCFG_DD_PLAIN=v\nGOCFG_DD_PASSWORD=\nGOCFG_DD_REQ=\n"
+	if got != want {
+		t.Fatalf("got:\n%q\nwant:\n%q", got, want)
+	}
+	if strings.Contains(got, "hunter2") {
+		t.Fatalf("secret leaked:\n%s", got)
+	}
+	found := false
+	for _, w := range res.Warnings {
+		if strings.Contains(w, "hunter2") {
+			t.Fatalf("secret leaked into warning: %q", w)
+		}
+		if strings.Contains(w, "GOCFG_DD_PASSWORD") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected secret warning, got %+v", res.Warnings)
 	}
 }

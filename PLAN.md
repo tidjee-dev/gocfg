@@ -128,6 +128,24 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
     §16/§17/§25/§36 (shipped scope), M8–M11 + §30 checked.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
+## v1 additions (all selected 2026-09-30)
+
+- [x] S13 JSON bridge
+  - `env/bridge.go`: versioned envelope (`{"version":1,"vars":[...]}`),
+    `MarshalDefinitions` / `UnmarshalDefinitions` (rejects bad envelope,
+    empty keys; kinds validated at use).
+  - `envsync.RunDefs`: manifest-ordered codegen (secrets + required
+    appended empty with warning); `env --defs`, `validate --defs`
+    (typed per-Kind, unknown kinds fail naming the key).
+  - README manifest recipe. No app import, no manifest staleness invented:
+    manifest is an explicit user artifact.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
+- [ ] S14 extra types (URL, IP, StringSlice, BoolSlice)
+- [ ] S15 `gocfg export`
+- [ ] S16 `gocfg diff`
+- [ ] S17 `gocfg doctor`
+- [ ] S18 v1 close-out (STABILITY.md, docs, gate, tag v1.0.0)
+
 ## Traceability (ROADMAP → PLAN)
 
 ```text

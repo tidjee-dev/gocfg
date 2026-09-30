@@ -83,6 +83,37 @@ func Definitions() []env.Any {
 (optional → default, required → error). `Secret()` redacts the value
 from errors and generated examples even when the key looks innocent.
 
+## Manifest bridge
+
+Apps can publish their definitions for the CLI (versioned envelope):
+
+```go
+// tools/gocfg-gen/main.go
+package main
+
+import (
+    "fmt"
+    "os"
+
+    "example.com/my-app/config"
+    "github.com/tidjee-dev/gocfg/env"
+)
+
+func main() {
+    raw, err := env.MarshalDefinitions(config.Definitions())
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(string(raw))
+}
+```
+
+```bash
+go run ./tools/gocfg-gen > .gocfg.json
+gocfg env --defs .gocfg.json        # generate .env in manifest order
+gocfg validate --defs .gocfg.json  # type-check per Kind
+```
+
 ## Environment precedence
 
 ```text

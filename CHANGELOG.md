@@ -6,6 +6,9 @@ promised before `v1.0.0`.
 
 ## Unreleased
 
+- JSON manifest bridge: `env.MarshalDefinitions` / `env.UnmarshalDefinitions`
+  (versioned envelope), `gocfg env --defs`, `gocfg validate --defs`
+  (typed per-Kind checks).
 - `cmd/gocfg`: package overview documentation (install, commands, exit codes).
 - `gocfg version`: falls back to the binary's build info when no ldflags
   version was injected, so `go install ...@latest` reports the real version
