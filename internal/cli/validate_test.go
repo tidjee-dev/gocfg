@@ -92,3 +92,88 @@ func TestValidateOSBeatsFile(t *testing.T) {
 		t.Fatalf("unexpected output:\n%s", out)
 	}
 }
+
+func writeNamedEnv(t *testing.T, dir, name, content string, perm os.FileMode) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, name), []byte(content), perm); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestValidateAllSuccess(t *testing.T) {
+	dir := t.TempDir()
+	writeNamedEnv(t, dir, ".env", "GOCFG_VA_ONE=1\nGOCFG_VA_TWO=2\n", 0o600)
+	writeNamedEnv(t, dir, ".env.example", "GOCFG_VA_ONE=\nGOCFG_VA_TWO=\n", 0o644)
+	out, err := runValidate(t, dir, "validate")
+	if err != nil {
+		t.Fatalf("err: %v\nout:\n%s", err, out)
+	}
+	for _, want := range []string{"✓ GOCFG_VA_ONE", "✓ GOCFG_VA_TWO", "Configuration is valid."} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %q in:\n%s", want, out)
+		}
+	}
+}
+
+func TestValidateAllMissing(t *testing.T) {
+	dir := t.TempDir()
+	writeNamedEnv(t, dir, ".env", "GOCFG_VB_ONE=1\n", 0o600)
+	writeNamedEnv(t, dir, ".env.example", "GOCFG_VB_ONE=\nGOCFG_VB_TWO=\n", 0o644)
+	out, err := runValidate(t, dir, "validate")
+	var ee *ExitError
+	if !errors.As(err, &ee) || ee.Code != 1 {
+		t.Fatalf("expected ExitError{1}, got %v\nout:\n%s", err, out)
+	}
+	for _, want := range []string{"✓ GOCFG_VB_ONE", "✗ GOCFG_VB_TWO", "Configuration is invalid."} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %q in:\n%s", want, out)
+		}
+	}
+}
+
+func TestValidateAllFromOSWithoutEnvFile(t *testing.T) {
+	dir := t.TempDir()
+	writeNamedEnv(t, dir, ".env.example", "GOCFG_VC_ONLY=\n", 0o644)
+	t.Setenv("GOCFG_VC_ONLY", "from-os")
+	out, err := runValidate(t, dir, "validate")
+	if err != nil {
+		t.Fatalf("err: %v\nout:\n%s", err, out)
+	}
+	if !strings.Contains(out, "✓ GOCFG_VC_ONLY") {
+		t.Fatalf("unexpected output:\n%s", out)
+	}
+}
+
+func TestValidateAllMalformedEnv(t *testing.T) {
+	dir := t.TempDir()
+	writeNamedEnv(t, dir, ".env", "BROKEN LINE\n", 0o600)
+	writeNamedEnv(t, dir, ".env.example", "GOCFG_VD_ONE=\n", 0o644)
+	_, err := runValidate(t, dir, "validate")
+	var ee *ExitError
+	if !errors.As(err, &ee) || ee.Code != 1 {
+		t.Fatalf("expected ExitError{1}, got %v", err)
+	}
+}
+
+func TestValidateAllNoExample(t *testing.T) {
+	dir := t.TempDir()
+	writeNamedEnv(t, dir, ".env", "GOCFG_VE_ONE=1\n", 0o600)
+	_, err := runValidate(t, dir, "validate")
+	var ee *ExitError
+	if !errors.As(err, &ee) || ee.Code != 1 {
+		t.Fatalf("expected ExitError{1}, got %v", err)
+	}
+}
+
+func TestValidateAllExtraWarns(t *testing.T) {
+	dir := t.TempDir()
+	writeNamedEnv(t, dir, ".env", "GOCFG_VF_ONE=1\nGOCFG_VF_EXTRA=9\n", 0o600)
+	writeNamedEnv(t, dir, ".env.example", "GOCFG_VF_ONE=\n", 0o644)
+	out, err := runValidate(t, dir, "validate")
+	if err != nil {
+		t.Fatalf("extras must not fail: %v\nout:\n%s", err, out)
+	}
+	if !strings.Contains(out, "! GOCFG_VF_EXTRA (not in .env.example)") {
+		t.Fatalf("missing extra warning in:\n%s", out)
+	}
+}

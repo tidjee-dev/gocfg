@@ -77,4 +77,12 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
 
 ## Log
 
+- S7: no-flag `validate` validates all keys declared in `.env.example`
+  (Required semantics, extras warn, malformed/missing fail). Typed flags
+  unchanged. Verified live in /tmp/gocfg-demo.
 - (append `Done: YYYY-MM-DD <sha>` per step)
+
+## Steps (continued)
+
+- [x] S7 validate-all
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).

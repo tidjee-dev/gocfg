@@ -78,9 +78,14 @@ if err := gocfg.LoadEnv(); err != nil {
 
 ```bash
 gocfg init [--force] [--dry-run] [--name my-app]
-gocfg validate --int APP_PORT --bool APP_DEBUG --required DATABASE_URL [--env-file .env]
+gocfg validate [--env-file .env]
+gocfg validate --int APP_PORT --bool APP_DEBUG --required DATABASE_URL
 gocfg version
 ```
+
+With no flags, `validate` checks every key declared in `.env.example`
+(OS > `.env`), warns about extra `.env` keys, and fails on missing or
+malformed entries.
 
 Exit codes: `0` success, `1` configuration/validation failure,
 `2` CLI usage error.
