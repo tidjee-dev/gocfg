@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 Versioning follows [SemVer](https://semver.org/); API stability is
 promised from `v1.0.0` (see `STABILITY.md`).
 
-## Unreleased
+## v1.2.1 — 2026-09-30
 
 - Consistency: `APP_URL` / `DATABASE_URL` are `URL` kind everywhere
   (scaffold templates, example definitions + manifest, ROADMAP sketches).
