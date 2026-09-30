@@ -22,6 +22,18 @@ func TestVersionOutputsVersion(t *testing.T) {
 	}
 }
 
+func TestResolveVersion(t *testing.T) {
+	Version = "v9.9.9"
+	t.Cleanup(func() { Version = "dev" })
+	if got := resolveVersion(); got != "v9.9.9" {
+		t.Fatalf("injected version must win, got %q", got)
+	}
+	Version = "dev"
+	if got := resolveVersion(); got == "" {
+		t.Fatal("fallback must never be empty")
+	}
+}
+
 func TestHelpSucceeds(t *testing.T) {
 	root := newRootCmd()
 	var sb strings.Builder

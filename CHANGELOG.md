@@ -7,6 +7,9 @@ promised before `v1.0.0`.
 ## Unreleased
 
 - `cmd/gocfg`: package overview documentation (install, commands, exit codes).
+- `gocfg version`: falls back to the binary's build info when no ldflags
+  version was injected, so `go install ...@latest` reports the real version
+  instead of `dev`.
 
 ## v0.2.0 — 2026-09-30
 
