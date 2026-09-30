@@ -37,12 +37,13 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
     `LastIndex` mis-close fixed); removed `countUnescaped`.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
-- [ ] S2 env getters + errors (ROADMAP M2)
+- [x] S2 env getters + errors (ROADMAP M2)
   - `env/*.go`: `String, Bool, Int, Int64, Float64, Duration, Required`,
     all `(T, error)`. Bool sets `1,true,yes,y,on` / `0,false,no,n,off`.
   - `Duration` via `time.ParseDuration`. Errors `invalid value for KEY...`,
     secret redaction (`Secret:true` + `PASSWORD|SECRET|KEY|TOKEN`).
   - Root `LoadEnv` wrapper. Tests incl. `OS > .env > default`.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 - [ ] S3 CLI foundation (ROADMAP M3)
   - `cobra` + `lipgloss` CLI-only, `cmd/gocfg/main.go`,
