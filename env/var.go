@@ -3,6 +3,8 @@ package env
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
 	"time"
 )
 
@@ -139,11 +141,40 @@ type Any interface {
 func (v Var[T]) AnyKey() string { return v.Key }
 
 // AnyDefault renders the default for generated files. Check IsRequired
-// first: required Vars carry an ignored zero default.
-func (v Var[T]) AnyDefault() string { return fmt.Sprintf("%v", v.Default) }
+// first: required Vars carry an ignored zero default. Rendering is
+// canonical: Stringer types (URL, IP) use String, slices join with
+// commas, anything else uses %v.
+func (v Var[T]) AnyDefault() string {
+	d := any(v.Default)
+	if d == nil {
+		return ""
+	}
+	// Guard typed nils (e.g. a *url.URL default that failed to parse:
+	// calling String on it would panic).
+	if rv := reflect.ValueOf(d); rv.Kind() == reflect.Ptr && rv.IsNil() {
+		return ""
+	}
+	switch d := d.(type) {
+	case nil:
+		return ""
+	case fmt.Stringer:
+		return d.String()
+	case []string:
+		return strings.Join(d, ",")
+	case []bool:
+		strs := make([]string, 0, len(d))
+		for _, b := range d {
+			strs = append(strs, fmt.Sprintf("%v", b))
+		}
+		return strings.Join(strs, ",")
+	default:
+		return fmt.Sprintf("%v", v.Default)
+	}
+}
 
 // AnyKind reports the type name ("string", "bool", "int",
-// "int64", "float64", "duration").
+// "int64", "float64", "duration", "url", "ip",
+// "stringslice", "boolslice").
 func (v Var[T]) AnyKind() string { return v.Kind }
 
 // IsSecret reports whether the value must be redacted and left empty

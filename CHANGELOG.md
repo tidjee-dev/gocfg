@@ -6,6 +6,9 @@ promised before `v1.0.0`.
 
 ## Unreleased
 
+- Extra types: `URL`, `IP`, `StringSlice`, `BoolSlice` getters plus
+  `URLVar`, `IPVar`, `StringSliceVar`, `BoolSliceVar` (kinds `url`,
+  `ip`, `stringslice`, `boolslice`, wired into `validate --defs`).
 - JSON manifest bridge: `env.MarshalDefinitions` / `env.UnmarshalDefinitions`
   (versioned envelope), `gocfg env --defs`, `gocfg validate --defs`
   (typed per-Kind checks).

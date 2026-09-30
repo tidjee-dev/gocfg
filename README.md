@@ -15,6 +15,11 @@ if err != nil {
 }
 ```
 
+Typed getters cover `String`, `Bool`, `Int`, `Int64`, `Float64`,
+`Duration`, `URL` (scheme required), `IP`, `StringSlice` / `BoolSlice`
+(comma-separated, quote-aware) — each with a matching `*Var`
+definition constructor.
+
 ## Installation
 
 Library:

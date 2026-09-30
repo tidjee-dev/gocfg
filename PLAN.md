@@ -140,7 +140,11 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - README manifest recipe. No app import, no manifest staleness invented:
     manifest is an explicit user artifact.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
-- [ ] S14 extra types (URL, IP, StringSlice, BoolSlice)
+- [x] S14 extra types (URL, IP, StringSlice, BoolSlice)
+  - Getters + `Var` constructors + `AnyKind` + `validate --defs` kinds.
+    `splitList` groups both quote types (stripped), drops empties.
+    `AnyDefault` renders Stringer/slices canonically, guards typed nils.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 - [ ] S15 `gocfg export`
 - [ ] S16 `gocfg diff`
 - [ ] S17 `gocfg doctor`

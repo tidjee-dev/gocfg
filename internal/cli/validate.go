@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"net/netip"
 	"os"
 	"slices"
 
@@ -169,6 +170,14 @@ func checkDefinition(d env.Definition, check func(key string, err error)) {
 		_, err = env.Float64(d.Key, 0)
 	case "duration":
 		_, err = env.Duration(d.Key, 0)
+	case "url":
+		_, err = env.URL(d.Key, "")
+	case "ip":
+		_, err = env.IP(d.Key, netip.Addr{})
+	case "stringslice":
+		_, err = env.StringSlice(d.Key, nil)
+	case "boolslice":
+		_, err = env.BoolSlice(d.Key, nil)
 	default:
 		err = fmt.Errorf("unsupported kind %q for %s", d.Kind, d.Key)
 	}
