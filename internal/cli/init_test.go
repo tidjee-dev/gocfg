@@ -30,13 +30,29 @@ func TestInitCreatesProject(t *testing.T) {
 	if err := root.Execute(); err != nil {
 		t.Fatal(err)
 	}
-	for _, rel := range []string{".env", ".env.example", "config/app.go", "config/config.go"} {
+	for _, rel := range []string{".env", ".env.example", "config/app.go", "config/config.go", ".gitignore"} {
 		if _, err := os.Stat(filepath.Join(dir, rel)); err != nil {
 			t.Fatalf("%s: %v", rel, err)
 		}
 	}
 	if !strings.Contains(sb.String(), "created .env") {
 		t.Fatalf("output missing creations:\n%s", sb.String())
+	}
+}
+
+func TestInitGitignoreOptOut(t *testing.T) {
+	dir := t.TempDir()
+	chdir(t, dir)
+
+	root := newRootCmd()
+	var sb strings.Builder
+	root.SetOut(&sb)
+	root.SetArgs([]string{"init", "--gitignore=false"})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".gitignore")); !os.IsNotExist(err) {
+		t.Fatal("--gitignore=false must not touch .gitignore")
 	}
 }
 

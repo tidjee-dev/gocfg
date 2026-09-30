@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -24,12 +25,15 @@ type Options struct {
 	Force bool
 	// DryRun reports what would happen without writing.
 	DryRun bool
+	// Gitignore ensures .env is covered by .gitignore.
+	Gitignore bool
 }
 
 // FileResult describes the outcome for one file.
 type FileResult struct {
 	Path    string // relative to Dir
 	Created bool   // written (or would be written in DryRun)
+	Updated bool   // modified in place (or would be in DryRun)
 	Skipped bool   // already existed and Force is false
 }
 
@@ -72,7 +76,87 @@ func Run(opts Options) (*Result, error) {
 			return nil, err
 		}
 	}
+	if opts.Gitignore {
+		if err := ensureGitignore(opts, res); err != nil {
+			return nil, err
+		}
+	}
 	return res, nil
+}
+
+// gitignoreCovered patterns count as ignoring .env.
+var gitignoreCovered = []string{".env", "/.env", "*.env"}
+
+// ensureGitignore creates .gitignore with `.env` or appends the entry,
+// preserving everything else. Covered files are skipped (idempotent,
+// unaffected by Force). Writes are atomic.
+func ensureGitignore(opts Options, res *Result) error {
+	const rel = ".gitignore"
+	dst := filepath.Join(opts.Dir, rel)
+	raw, err := os.ReadFile(dst)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("scaffold: %s: %w", rel, err)
+	}
+	if err == nil {
+		for _, line := range strings.Split(string(raw), "\n") {
+			t := strings.TrimSpace(line)
+			if t == "" || strings.HasPrefix(t, "#") {
+				continue
+			}
+			for _, p := range gitignoreCovered {
+				if t == p {
+					res.Files = append(res.Files, FileResult{Path: rel, Skipped: true})
+					return nil
+				}
+			}
+		}
+	}
+
+	fr := FileResult{Path: rel}
+	if len(raw) == 0 {
+		fr.Created = true
+	} else {
+		fr.Updated = true
+	}
+	if opts.DryRun {
+		res.Files = append(res.Files, fr)
+		return nil
+	}
+	var out []byte
+	if len(raw) == 0 {
+		out = []byte(".env\n")
+	} else {
+		out = append([]byte{}, raw...)
+		if out[len(out)-1] != '\n' {
+			out = append(out, '\n')
+		}
+		out = append(out, ".env\n"...)
+	}
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return fmt.Errorf("scaffold: %s: %w", rel, err)
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(dst), ".gocfg-*")
+	if err != nil {
+		return fmt.Errorf("scaffold: %s: %w", rel, err)
+	}
+	tmpName := tmp.Name()
+	defer os.Remove(tmpName)
+	if _, err := tmp.Write(out); err != nil {
+		tmp.Close()
+		return fmt.Errorf("scaffold: %s: %w", rel, err)
+	}
+	if err := tmp.Chmod(0o644); err != nil {
+		tmp.Close()
+		return fmt.Errorf("scaffold: %s: %w", rel, err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("scaffold: %s: %w", rel, err)
+	}
+	if err := os.Rename(tmpName, dst); err != nil {
+		return fmt.Errorf("scaffold: %s: %w", rel, err)
+	}
+	res.Files = append(res.Files, fr)
+	return nil
 }
 
 func render(name string, data map[string]string) ([]byte, error) {
