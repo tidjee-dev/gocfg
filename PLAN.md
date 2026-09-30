@@ -151,7 +151,11 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
     keys warn on stderr with exit 0, bad format exits 2.
   - `internal/envexport` core + cobra wiring, README + CHANGELOG.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
-- [ ] S16 `gocfg diff`
+- [x] S16 `gocfg diff`
+  - File-level three-way (manifest optional): missing keys + default
+    drift fail, extras/secret-values/example-only warn, values never
+    print, OS ignored. `internal/envdiff` core + cobra wiring.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 - [ ] S17 `gocfg doctor`
 - [ ] S18 v1 close-out (STABILITY.md, docs, gate, tag v1.0.0)
 

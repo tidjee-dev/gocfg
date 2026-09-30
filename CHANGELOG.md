@@ -6,6 +6,9 @@ promised before `v1.0.0`.
 
 ## Unreleased
 
+- `gocfg diff [--defs]`: file-level manifest/example/env comparison
+  (missing keys and default drift fail, extras and secret values warn;
+  values never print).
 - `gocfg export [--format shell|dotenv|json]`: prints schema keys resolved
   as `OS > .env` (missing warn on stderr, exit 0); never dumps the whole
   environment.
