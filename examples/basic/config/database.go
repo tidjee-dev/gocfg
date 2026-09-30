@@ -1,16 +1,20 @@
 package config
 
-import "github.com/tidjee-dev/gocfg/env"
+import (
+	"net/url"
+
+	"github.com/tidjee-dev/gocfg/env"
+)
 
 // DatabaseConfig holds the database configuration.
 type DatabaseConfig struct {
-	URL      string
+	URL      *url.URL
 	MaxConns int
 }
 
 // Database resolves the database configuration.
 func Database() (DatabaseConfig, error) {
-	url, err := env.String("DATABASE_URL", "postgres://localhost:5432/myapp")
+	url, err := env.URL("DATABASE_URL", "postgres://localhost:5432/myapp")
 	if err != nil {
 		return DatabaseConfig{}, err
 	}

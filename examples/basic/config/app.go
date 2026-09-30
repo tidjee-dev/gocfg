@@ -1,13 +1,17 @@
 package config
 
-import "github.com/tidjee-dev/gocfg/env"
+import (
+	"net/url"
+
+	"github.com/tidjee-dev/gocfg/env"
+)
 
 // AppConfig holds the application-level configuration.
 type AppConfig struct {
 	Name  string
 	Env   string
 	Debug bool
-	URL   string
+	URL   *url.URL
 }
 
 // App resolves the application configuration.
@@ -24,7 +28,7 @@ func App() (AppConfig, error) {
 	if err != nil {
 		return AppConfig{}, err
 	}
-	url, err := env.String("APP_URL", "http://localhost:9000")
+	url, err := env.URL("APP_URL", "http://localhost:9000")
 	if err != nil {
 		return AppConfig{}, err
 	}
