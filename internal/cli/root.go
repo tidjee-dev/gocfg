@@ -17,6 +17,7 @@ plain Go code; this CLI only handles project files.`,
 		SilenceUsage: true,
 	}
 	root.AddCommand(newVersionCmd())
+	root.AddCommand(newInitCmd())
 	return root
 }
 

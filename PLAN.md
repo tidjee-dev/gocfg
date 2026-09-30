@@ -51,10 +51,12 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass,
     `--help` + `version` verified).
 
-- [ ] S4 `gocfg init` (ROADMAP M4)
+- [x] S4 `gocfg init` (ROADMAP M4)
   - `internal/scaffold/` + `embed` templates, error-returning
     `config/app.go` + `config/config.go`, `.env 0600`, `.env.example 0644`.
   - `--force/--dry-run/--name`, skip-existing, `t.TempDir()` tests.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass,
+    `--dry-run` verified).
 
 - [ ] S5 `gocfg validate` (ROADMAP M5)
   - `LoadEnv` + typed resolve + `Required` + `Config.Validate()`,

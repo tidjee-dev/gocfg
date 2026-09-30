@@ -1,0 +1,17 @@
+package config
+
+type Config struct {
+	App AppConfig
+}
+
+func Load() (Config, error) {
+	app, err := App()
+	if err != nil {
+		return Config{}, err
+	}
+	return Config{App: app}, nil
+}
+
+func (c Config) Validate() error {
+	return nil
+}
