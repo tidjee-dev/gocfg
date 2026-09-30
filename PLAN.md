@@ -58,9 +58,13 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass,
     `--dry-run` verified).
 
-- [ ] S5 `gocfg validate` (ROADMAP M5)
+- [x] S5 `gocfg validate` (ROADMAP M5)
   - `LoadEnv` + typed resolve + `Required` + `Config.Validate()`,
     redacted output, exit 1. Tests + exit-code.
+  - v0.1 takes explicit specs via flags (`--int/--bool/--duration/...`,
+    `--required`, `--env-file`); Var[T] definitions deferred to v0.2.
+  - Exit codes verified: 0 valid, 1 invalid, 2 usage.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 - [ ] S6 docs + example + audit (ROADMAP M6/M7)
   - `examples/basic/` with `Load() (Config, error)` flow, README quickstart,

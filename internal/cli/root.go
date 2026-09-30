@@ -14,10 +14,12 @@ func newRootCmd() *cobra.Command {
 		Long: `gocfg manages Go application configuration: initialization,
 environment files, and validation. Configuration itself stays
 plain Go code; this CLI only handles project files.`,
-		SilenceUsage: true,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 	root.AddCommand(newVersionCmd())
 	root.AddCommand(newInitCmd())
+	root.AddCommand(newValidateCmd())
 	return root
 }
 

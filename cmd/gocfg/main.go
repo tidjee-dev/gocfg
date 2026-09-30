@@ -1,12 +1,8 @@
-// Command gocfg manages Go application configuration:
-// initialization, environment files, and validation.
-//
-// Release builds should inject the version:
-//
-//	go build -ldflags "-X github.com/tidjee-dev/gocfg/internal/cli.Version=v0.1.0" ./cmd/gocfg
 package main
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
 	"github.com/tidjee-dev/gocfg/internal/cli"
@@ -14,6 +10,12 @@ import (
 
 func main() {
 	if err := cli.Execute(); err != nil {
-		os.Exit(1)
+		var ee *cli.ExitError
+		if errors.As(err, &ee) {
+			fmt.Fprintln(os.Stderr, "Error:", ee.Err)
+			os.Exit(ee.Code) // 1 = configuration/validation failure
+		}
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(2) // 2 = CLI usage error
 	}
 }
