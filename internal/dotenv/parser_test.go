@@ -162,6 +162,18 @@ func TestParseMalformed(t *testing.T) {
 	}
 }
 
+func TestParseEmpty(t *testing.T) {
+	for _, src := range []string{"", "\n", "# only a comment\n\n"} {
+		m, err := Parse([]byte(src))
+		if err != nil {
+			t.Fatalf("%q: %v", src, err)
+		}
+		if len(m) != 0 {
+			t.Fatalf("%q: got %v, want empty", src, m)
+		}
+	}
+}
+
 func TestParseDoesNotTouchOSEnv(t *testing.T) {
 	t.Setenv("APP_PORT", "7000")
 	m, err := Parse([]byte("APP_PORT=8000\n"))

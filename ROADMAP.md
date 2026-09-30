@@ -1060,55 +1060,60 @@ func (c Config) Validate() error {
 
 Testing should be a major part of the project.
 
-## Environment tests
+## Environment tests (v0.1: done, see `env/env_test.go`)
 
-- [ ] string fallback
-- [ ] string environment value
-- [ ] boolean parsing (all true/false sets + invalid)
-- [ ] integer parsing
-- [ ] int64 parsing
-- [ ] float parsing
-- [ ] duration parsing (`time.ParseDuration` cases)
-- [ ] invalid values return error (not fallback)
-- [ ] precedence `OS > .env > default`, `LoadEnv` never overrides OS
-- [ ] secret redaction in errors (`Secret:true` + heuristic)
+- [x] string fallback
+- [x] string environment value
+- [x] boolean parsing (all true/false sets + invalid)
+- [x] integer parsing
+- [x] int64 parsing
+- [x] float parsing
+- [x] duration parsing (`time.ParseDuration` cases)
+- [x] invalid values return error (not fallback)
+- [x] precedence `OS > .env > default`, `LoadEnv` never overrides OS
+- [x] secret redaction in errors (heuristic; `Secret` flag arrives with `Var[T]` in v0.2)
 
-## `.env` tests
+## `.env` tests (v0.1: done, see `internal/dotenv/`)
 
-- [ ] empty file
-- [ ] comments
-- [ ] whitespace
-- [ ] quoted / multiline / escaped values (godotenv parity)
-- [ ] `export` prefix
-- [ ] `${VAR}` expansion
-- [ ] duplicate keys last-wins
-- [ ] malformed entries error with line number
-- [ ] precedence against OS environment
-- [ ] custom path + multi-path
+- [x] empty file
+- [x] comments
+- [x] whitespace
+- [x] quoted / multiline / escaped values (compat table tests; vendored fixtures in S12)
+
+- [x] empty file
+- [x] comments
+- [x] whitespace
+- [x] quoted / multiline / escaped values (godotenv parity)
+- [x] `export` prefix
+- [x] `${VAR}` expansion
+- [x] duplicate keys last-wins
+- [x] malformed entries error with line number
+- [x] precedence against OS environment
+- [x] custom path + multi-path
 
 ## Configuration tests
 
-- [ ] configuration definitions
-- [ ] defaults
-- [ ] required values
-- [ ] validation
-- [ ] invalid configuration
+- [ ] configuration definitions (v0.2, S9)
+- [x] defaults
+- [x] required values
+- [x] validation (`gocfg validate` + `Config.Validate` in example)
+- [x] invalid configuration
 
 ## CLI tests
 
 Use `t.TempDir()` for filesystem isolation.
 
-### `init`
+### `init` (v0.1: done)
 
-- [ ] creates `.env`
-- [ ] creates `.env.example`
-- [ ] creates `config/`
-- [ ] creates config files
-- [ ] does not overwrite existing files
-- [ ] `--force` overwrites
-- [ ] `--dry-run` does not modify files
+- [x] creates `.env`
+- [x] creates `.env.example`
+- [x] creates `config/`
+- [x] creates config files
+- [x] does not overwrite existing files
+- [x] `--force` overwrites
+- [x] `--dry-run` does not modify files
 
-### `env`
+### `env` (v0.2, S10)
 
 - [ ] creates missing `.env`
 - [ ] creates missing `.env.example`
@@ -1118,22 +1123,22 @@ Use `t.TempDir()` for filesystem isolation.
 - [ ] does not expose secrets
 - [ ] handles malformed configuration
 
-### `check`
+### `check` (v0.2, S11)
 
 - [ ] detects missing `.env`
 - [ ] detects missing `config/`
 - [ ] detects invalid definitions
 - [ ] reports inconsistencies
 
-### `validate`
+### `validate` (v0.1: done)
 
-- [ ] succeeds for valid configuration
-- [ ] fails for invalid values
-- [ ] returns correct exit code
+- [x] succeeds for valid configuration
+- [x] fails for invalid values
+- [x] returns correct exit code
 
-### `version`
+### `version` (v0.1: done)
 
-- [ ] outputs version
+- [x] outputs version
 
 # 31. Security
 

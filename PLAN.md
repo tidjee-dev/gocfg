@@ -81,12 +81,11 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
 
 ## v0.1 release — pending
 
-- [ ] S8 release
-  - LICENSE (default MIT — confirm), minimal `CHANGELOG.md`, `CONTRIBUTING.md`.
-  - CI workflow: `gofmt -l`, `go vet ./...`, `go test -race` on push.
-  - M7 API-freeze review: public surface (`env`, `LoadEnv`, CLI flags);
-    remove dead code; ROADMAP §30: check off fulfilled test boxes.
-  - Merge `tidjee` → `main`, tag `v0.1.0`.
+- [x] S8 release
+  - MIT LICENSE, CHANGELOG.md, CONTRIBUTING.md, CI (`gofmt`/`vet`/`test -race`).
+  - M7 review: public surface frozen (`env` getters, `LoadEnv`, CLI flags);
+    no dead code; added empty-file test; §30 boxes checked off.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 ## v0.2 — planned (ROADMAP M8–M11)
 
