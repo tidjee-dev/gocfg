@@ -1179,7 +1179,11 @@ while keeping:
 
 tracked.
 
-`gocfg init` should initially avoid silently modifying `.gitignore`. A future explicit option can handle this.
+`gocfg init` ensures `.env` is covered by `.gitignore` by default
+(create or append, never duplicate, existing content preserved);
+`--gitignore=false` opts out. Decided post-v1.0.0, superseding the
+earlier avoid-silently-modifying rule — the operation is reported
+line-by-line like every other scaffolded file.
 
 # 32. Documentation
 

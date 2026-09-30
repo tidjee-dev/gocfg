@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 Versioning follows [SemVer](https://semver.org/); API stability is
 promised from `v1.0.0` (see `STABILITY.md`).
 
+## Unreleased
+
+- `gocfg init` ensures `.env` is covered by `.gitignore` by default
+  (`--gitignore=false` opts out); scaffolded `config/` uses `URL`
+  types with `Env` validation; `examples/basic` demonstrates
+  `Var[T]` definitions plus a committed manifest.
+
 ## v1.0.0 — 2026-09-30
 
 First stable release. Everything below is frozen per `STABILITY.md`.

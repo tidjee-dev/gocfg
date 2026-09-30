@@ -167,6 +167,21 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - Full gate + dep-boundary + secret audit + live smoke of all commands.
   - Done: 2026-09-30.
 
+## Post-v1 (on tidjee, unreleased)
+
+- [x] Scaffold `.gitignore` (default on, `--gitignore=false` opts out)
+  - `scaffold.Options.Gitignore`, create/append/skip-if-covered, atomic
+    `0644`, dry-run aware; CLI output lines; `t.TempDir()` tests.
+- [x] Scaffold + example consistency (URL types, Env validation)
+  - Fixed missing `net/url` import (generated code didn't compile);
+    template + `examples/basic` use `env.URL`; template `Validate()`
+    matches example. Generated project verified with `go build`.
+- [x] Example depth (`Var[T]` showcase)
+  - `examples/basic/config/vars.go` + `Definitions()`,
+    `tools/gocfg-gen`, committed `.gocfg.json`; manifest loop
+    (`env`/`validate`/`diff --defs`) verified live.
+- [x] Docs: README flags, CHANGELOG Unreleased, ROADMAP §31 amendment.
+
 ## Traceability (ROADMAP → PLAN)
 
 ```text
