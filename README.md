@@ -1,5 +1,8 @@
 # gocfg
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/tidjee-dev/gocfg.svg)](https://pkg.go.dev/github.com/tidjee-dev/gocfg)
+[![CI](https://github.com/tidjee-dev/gocfg/actions/workflows/ci.yml/badge.svg)](https://github.com/tidjee-dev/gocfg/actions/workflows/ci.yml)
+
 A small, type-safe configuration library for Go applications.
 
 Configuration is written in **Go**. Environment-specific values come from
