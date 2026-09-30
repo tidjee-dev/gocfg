@@ -18,12 +18,12 @@
     },
     {
       "key": "APP_URL",
-      "kind": "string",
+      "kind": "url",
       "default": "http://localhost:9000"
     },
     {
       "key": "DATABASE_URL",
-      "kind": "string",
+      "kind": "url",
       "default": "postgres://localhost:5432/myapp"
     },
     {

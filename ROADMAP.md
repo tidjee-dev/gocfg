@@ -113,13 +113,17 @@ Example:
 ```go
 package config
 
-import "github.com/tidjee-dev/gocfg/env"
+import (
+    "net/url"
+
+    "github.com/tidjee-dev/gocfg/env"
+)
 
 type AppConfig struct {
     Name  string
     Env   string
     Debug bool
-    URL   string
+    URL   *url.URL
 }
 
 func App() (AppConfig, error) {
@@ -135,7 +139,7 @@ func App() (AppConfig, error) {
     if err != nil {
         return AppConfig{}, err
     }
-    url, err := env.String("APP_URL", "http://localhost:9000")
+    url, err := env.URL("APP_URL", "http://localhost:9000")
     if err != nil {
         return AppConfig{}, err
     }
@@ -620,7 +624,7 @@ Example definitions:
 var AppName = env.StringVar("APP_NAME", "My App")
 var AppEnv = env.StringVar("APP_ENV", "dev")
 var AppDebug = env.BoolVar("APP_DEBUG", true)
-var AppURL = env.StringVar("APP_URL", "http://localhost:9000")
+var AppURL = env.URLVar("APP_URL", "http://localhost:9000")
 ```
 
 Produces:
@@ -746,13 +750,17 @@ APP_URL=http://localhost:9000
 ```go
 package config
 
-import "github.com/tidjee-dev/gocfg/env"
+import (
+    "net/url"
+
+    "github.com/tidjee-dev/gocfg/env"
+)
 
 type AppConfig struct {
     Name  string
     Env   string
     Debug bool
-    URL   string
+    URL   *url.URL
 }
 
 func App() (AppConfig, error) {
@@ -768,7 +776,7 @@ func App() (AppConfig, error) {
     if err != nil {
         return AppConfig{}, err
     }
-    url, err := env.String("APP_URL", "http://localhost:9000")
+    url, err := env.URL("APP_URL", "http://localhost:9000")
     if err != nil {
         return AppConfig{}, err
     }

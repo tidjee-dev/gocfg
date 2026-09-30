@@ -8,8 +8,8 @@ var (
 	AppName          = env.StringVar("APP_NAME", "My App")
 	AppEnv           = env.StringVar("APP_ENV", "dev")
 	AppDebug         = env.BoolVar("APP_DEBUG", true)
-	AppURL           = env.StringVar("APP_URL", "http://localhost:9000")
-	DatabaseURL      = env.StringVar("DATABASE_URL", "postgres://localhost:5432/myapp")
+	AppURL           = env.URLVar("APP_URL", "http://localhost:9000")
+	DatabaseURL      = env.URLVar("DATABASE_URL", "postgres://localhost:5432/myapp")
 	DatabaseMaxConns = env.IntVar("DATABASE_MAX_CONNS", 10)
 )
 

@@ -10,7 +10,7 @@ var (
 	AppName  = env.StringVar("APP_NAME", "My App")
 	AppEnv   = env.StringVar("APP_ENV", "dev")
 	AppDebug = env.BoolVar("APP_DEBUG", true)
-	AppURL   = env.StringVar("APP_URL", "http://localhost:9000")
+	AppURL   = env.URLVar("APP_URL", "http://localhost:9000")
 )
 
 // Definitions exposes every configuration variable for tooling.
