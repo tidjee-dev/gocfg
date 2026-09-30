@@ -66,9 +66,14 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - Exit codes verified: 0 valid, 1 invalid, 2 usage.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
-- [ ] S6 docs + example + audit (ROADMAP M6/M7)
+- [x] S6 docs + example + audit (ROADMAP M6/M7)
   - `examples/basic/` with `Load() (Config, error)` flow, README quickstart,
     CLI reference, security doc. Final audit. Tag proposal `v0.1.0`.
+  - Example verified end-to-end (`go run .` prints app name).
+  - Audit: `os.Setenv` only in guarded loader, cobra/lipgloss confined to
+    `internal/cli` (boundary checked via `go list -deps`), secrets redacted
+    (tested), `.env` gitignored + `0600` + atomic writes (tested).
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 ## Log
 
