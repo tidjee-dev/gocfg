@@ -1,12 +1,14 @@
-# gocfg — Execution Plan (thin v0.1)
+# gocfg — Execution Plan
 
-Source: `ROADMAP.md` §§35–36. Original roadmap: `docs/ROADMAP.orig.md`.
+Source: `ROADMAP.md` (v0.1 §§35–36, v0.2 M8–M11). Original: `docs/ROADMAP.orig.md`.
 Branch: `tidjee` → `origin/tidjee`. Go 1.27.1, stdlib-only core.
 
-Decisions (MCQ 2026-09-29): error-returning getters `(T, error)`,
-godotenv-compat parser, append-only `.env` merge, `Secret flag + heuristic`,
-thin v0.1 (`dotenv + getters + LoadEnv + init + validate + version`).
-`gocfg env`, `check`, `Var[T]` definitions → v0.2.
+Decisions (MCQ 2026-09-29 + follow-ups): error-returning getters `(T, error)`,
+godotenv-compat behavior (own table tests; godotenv fixtures not vendored yet),
+append-only `.env` merge, heuristic-only secret redaction in v0.1
+(`Secret` flag arrives with `Var[T]` in v0.2), thin v0.1
+(`dotenv + getters + LoadEnv + init + validate + version`), no-flag
+`validate` checks all `.env.example` keys. `gocfg env`, `check`, `Var[T]` → v0.2.
 
 ## Gate (every step)
 
@@ -18,21 +20,20 @@ go test ./... -count=1 -race
 
 If all green: flip checkbox, append `Done:` line, commit + `git push origin tidjee`.
 
-## Steps
+## v0.1 — done (accurate record)
 
 - [x] S0 PLAN.md + hygiene
-  - Create this file, fix `.gitignore`, track `internal/dotenv` draft.
-  - Known issues logged for S1: `parser.go:71-74` export double-trim,
-    `isClosedMultiline` over-counts quotes.
+  - Created this file, fixed `.gitignore`, tracked `internal/dotenv` draft.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, dotenv tests pass).
 
 - [x] S1 dotenv harden (ROADMAP M1)
   - `internal/dotenv`: quotes/multiline/escapes, `export`, `${VAR}` OS-first
     expansion, whitespace, last-wins, malformed → `*ParseError` with line no.
   - `loader.go`: default `.env` missing = nil, explicit missing = error,
-    never override OS, multi-path.
-  - Tests: table tests + godotenv parity fixtures + `loader_test.go`.
-  - Fixed: export double-trim → `cutExportPrefix`; quote closing now
+    never overrides OS, multi-path.
+  - Tests: compat table tests + `loader_test.go`. NOTE: godotenv fixtures
+    were never vendored — tracked in S12.
+  - Fixed: export double-trim → `cutExportPrefix`; quote closing is now
     first-unescaped-quote (single-line trailing comments work, multiline
     `LastIndex` mis-close fixed); removed `countUnescaped`.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
@@ -41,48 +42,87 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - `env/*.go`: `String, Bool, Int, Int64, Float64, Duration, Required`,
     all `(T, error)`. Bool sets `1,true,yes,y,on` / `0,false,no,n,off`.
   - `Duration` via `time.ParseDuration`. Errors `invalid value for KEY...`,
-    secret redaction (`Secret:true` + `PASSWORD|SECRET|KEY|TOKEN`).
+    redacted via key heuristic (`PASSWORD|SECRET|KEY|TOKEN`). NOTE: no
+    `Secret` flag in v0.1 — it arrives with `Var[T]` in S9.
   - Root `LoadEnv` wrapper. Tests incl. `OS > .env > default`.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 - [x] S3 CLI foundation (ROADMAP M3)
   - `cobra` + `lipgloss` CLI-only, `cmd/gocfg/main.go`,
     `internal/cli/{root,version}.go`, ldflags version.
-  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass,
-    `--help` + `version` verified).
+  - Done: 2026-09-30 (gate: `--help` + `version` verified).
 
 - [x] S4 `gocfg init` (ROADMAP M4)
   - `internal/scaffold/` + `embed` templates, error-returning
     `config/app.go` + `config/config.go`, `.env 0600`, `.env.example 0644`.
-  - `--force/--dry-run/--name`, skip-existing, `t.TempDir()` tests.
-  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass,
-    `--dry-run` verified).
+  - `--force/--dry-run/--name`, skip-existing, atomic writes, `t.TempDir()` tests.
+  - Done: 2026-09-30 (gate: `--dry-run` verified live).
 
-- [x] S5 `gocfg validate` (ROADMAP M5)
-  - `LoadEnv` + typed resolve + `Required` + `Config.Validate()`,
-    redacted output, exit 1. Tests + exit-code.
-  - v0.1 takes explicit specs via flags (`--int/--bool/--duration/...`,
-    `--required`, `--env-file`); Var[T] definitions deferred to v0.2.
-  - Exit codes verified: 0 valid, 1 invalid, 2 usage.
-  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
+- [x] S5 `gocfg validate` specs (ROADMAP M5)
+  - Typed flag specs (`--int/--bool/--duration/...`, `--required`, `--env-file`).
+    NOTE: does not call app `Config.Validate()` — impossible without an app
+    import in v0.1; domain validation stays in user code (see `examples/basic`).
+  - Exit codes verified live: 0 valid, 1 invalid, 2 usage.
+  - Done: 2026-09-30 (gate: tests -race pass).
 
-- [x] S6 docs + example + audit (ROADMAP M6/M7)
-  - `examples/basic/` with `Load() (Config, error)` flow, README quickstart,
-    CLI reference, security doc. Final audit. Tag proposal `v0.1.0`.
-  - Example verified end-to-end (`go run .` prints app name).
+- [x] S6 docs + example + audit (ROADMAP M6)
+  - README (install, quickstart, precedence, CLI reference, security),
+    `examples/basic/` with `Load() (Config, error)` flow, verified end-to-end.
   - Audit: `os.Setenv` only in guarded loader, cobra/lipgloss confined to
-    `internal/cli` (boundary checked via `go list -deps`), secrets redacted
-    (tested), `.env` gitignored + `0600` + atomic writes (tested).
+    `internal/cli` (checked via `go list -deps`), secrets redacted (tested),
+    `.env` gitignored + `0600` + atomic writes (tested).
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
-
-## Log
-
-- S7: no-flag `validate` validates all keys declared in `.env.example`
-  (Required semantics, extras warn, malformed/missing fail). Typed flags
-  unchanged. Verified live in /tmp/gocfg-demo.
-- (append `Done: YYYY-MM-DD <sha>` per step)
-
-## Steps (continued)
 
 - [x] S7 validate-all
+  - No-flag `validate` checks every key declared in `.env.example`
+    (`Required` semantics), warns on extras, fails on malformed/missing.
+    Typed flags unchanged. README updated. Verified live in /tmp/gocfg-demo.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
+
+## v0.1 release — pending
+
+- [ ] S8 release
+  - LICENSE (default MIT — confirm), minimal `CHANGELOG.md`, `CONTRIBUTING.md`.
+  - CI workflow: `gofmt -l`, `go vet ./...`, `go test -race` on push.
+  - M7 API-freeze review: public surface (`env`, `LoadEnv`, CLI flags);
+    remove dead code; ROADMAP §30: check off fulfilled test boxes.
+  - Merge `tidjee` → `main`, tag `v0.1.0`.
+
+## v0.2 — planned (ROADMAP M8–M11)
+
+- [ ] S9 `Var[T]` definitions (M8)
+  - `Var[T]{Key, Default, Secret, Parse}` + `Resolve() (T, error)`,
+    `Definitions() []Any`, explicit list — no globals, no AST parsing,
+    no reflection-heavy magic. Definition tests.
+
+- [ ] S10 `gocfg env` (M9)
+  - Discover `Definitions()`; append-missing-only merge (preserve values,
+    comments, order), atomic write; secrets empty in `.env.example`.
+  - `--force` only where appropriate. Tests.
+
+- [ ] S11 `gocfg check` (M10)
+  - Shallow static check (files exist, `.env` parses, keys present vs
+    `.env.example`); no type coercion (that's `validate`). Exit codes. Tests.
+
+- [ ] S12 hardening + roadmap sync (M11)
+  - Secret-handling audit, unusual values, partial writes.
+  - Vendor godotenv fixtures for parser parity (closes S1 NOTE).
+  - Fix ROADMAP staleness: §26 (validate-all default), §32 (drop `env`
+    from quickstart until S10), §13 (implement or drop `Override` option).
+
+## Traceability (ROADMAP → PLAN)
+
+```text
+M0  → S0 + S8
+M1  → S1
+M2  → S2
+M3  → S3
+M4  → S4
+M5  → S5 + S7
+M6  → S6
+M7  → S8
+M8  → S9
+M9  → S10
+M10 → S11
+M11 → S12
+```
