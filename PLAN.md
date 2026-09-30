@@ -110,9 +110,12 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - `internal/envsync` core + cobra wiring, README + CHANGELOG.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
-- [ ] S11 `gocfg check` (M10)
-  - Shallow static check (files exist, `.env` parses, keys present vs
-    `.env.example`); no type coercion (that's `validate`). Exit codes. Tests.
+- [x] S11 `gocfg check` (M10)
+  - Static only: no env mutation, `config/` exists, files parse, schema
+    keys present in `.env` or OS (empty counts — validate owns values);
+    missing `.env` warns with OS fallback; extras/secret-values warn.
+  - `internal/cli/check.go` + tests, README split documented.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 - [ ] S12 hardening + roadmap sync (M11)
   - Secret-handling audit, unusual values, partial writes.

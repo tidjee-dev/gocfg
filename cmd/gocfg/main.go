@@ -10,8 +10,7 @@ import (
 
 func main() {
 	if err := cli.Execute(); err != nil {
-		var ee *cli.ExitError
-		if errors.As(err, &ee) {
+		if ee, ok := errors.AsType[*cli.ExitError](err); ok {
 			fmt.Fprintln(os.Stderr, "Error:", ee.Err)
 			os.Exit(ee.Code) // 1 = configuration/validation failure
 		}

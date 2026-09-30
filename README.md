@@ -99,6 +99,7 @@ if err := gocfg.LoadEnv(); err != nil {
 ```bash
 gocfg init [--force] [--dry-run] [--name my-app]
 gocfg env [--env-file .env --example-file .env.example --check]
+gocfg check [--env-file .env --example-file .env.example]
 gocfg validate [--env-file .env]
 gocfg validate --int APP_PORT --bool APP_DEBUG --required DATABASE_URL
 gocfg version
@@ -108,15 +109,17 @@ gocfg version
 example values, empty for secrets); existing content is never touched.
 `--check` reports without writing (exit 1 when out of sync).
 
+`check` is the static health inspection: `config/` exists, files parse,
+every schema key present in `.env` or OS (empty counts as present).
+It never touches the environment and performs no type coercion —
+that is `validate`'s job.
+
 With no flags, `validate` checks every key declared in `.env.example`
 (OS > `.env`), warns about extra `.env` keys, and fails on missing or
 malformed entries.
 
 Exit codes: `0` success, `1` configuration/validation failure,
 `2` CLI usage error.
-
-`gocfg env` (sync) and `gocfg check` arrive in v0.2 on top of
-the `Var[T]` definitions API.
 
 ## Security
 

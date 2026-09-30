@@ -6,6 +6,9 @@ promised before `v1.0.0`.
 
 ## Unreleased
 
+- `gocfg check`: static health inspection (`config/` exists, files parse,
+  schema keys present in `.env` or OS with empty counting as present);
+  no env mutation, no type coercion; exit 1 on missing/unparseable.
 - `gocfg env [--check]`: completes `.env` from `.env.example`
   (append-missing-only, secrets appended empty, extras warn, exit 1
   on change in `--check` mode).
