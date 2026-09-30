@@ -15,12 +15,17 @@ func Bool(key string, fallback bool) (bool, error) {
 	if !ok {
 		return fallback, nil
 	}
-	norm := strings.ToLower(strings.TrimSpace(v))
+	return parseBool(key, v)
+}
+
+// parseBool is the shared boolean parser used by Bool and BoolVar.
+func parseBool(key, value string) (bool, error) {
+	norm := strings.ToLower(strings.TrimSpace(value))
 	if trueSet[norm] {
 		return true, nil
 	}
 	if falseSet[norm] {
 		return false, nil
 	}
-	return false, parseError(key, "boolean", v)
+	return false, parseError(key, "boolean", value)
 }

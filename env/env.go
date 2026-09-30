@@ -6,6 +6,10 @@
 //
 // Every getter returns (T, error). Invalid values are errors, never silent
 // fallbacks. Error messages redact values for secret keys.
+//
+// Explicit definitions live in Var: a Var[T] bundles key, default, type,
+// required and secret metadata with a shared parser, and resolves with
+// the same precedence. Apps expose Definitions() []Any for CLI consumption.
 package env
 
 import "os"

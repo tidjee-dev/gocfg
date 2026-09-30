@@ -7,3 +7,9 @@ func String(key, fallback string) (string, error) {
 	}
 	return fallback, nil
 }
+
+// parseString is the shared parser used by String and StringVar.
+// Strings never fail to parse.
+func parseString(_, value string) (string, error) {
+	return value, nil
+}

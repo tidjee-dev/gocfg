@@ -9,9 +9,14 @@ func Int(key string, fallback int) (int, error) {
 	if !ok {
 		return fallback, nil
 	}
-	n, err := strconv.Atoi(v)
+	return parseInt(key, v)
+}
+
+// parseInt is the shared integer parser used by Int and IntVar.
+func parseInt(key, value string) (int, error) {
+	n, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, parseError(key, "integer", v)
+		return 0, parseError(key, "integer", value)
 	}
 	return n, nil
 }

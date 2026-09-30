@@ -60,6 +60,26 @@ func Load() (Config, error) {
 
 `gocfg` never discovers or executes `config/*.go` on its own.
 
+## Definitions
+
+Explicit `Var[T]` definitions are the source of truth the CLI consumes:
+
+```go
+var (
+    AppName    = env.StringVar("APP_NAME", "My App")
+    AppPort    = env.IntVar("APP_PORT", 9000)
+    DBPassword = env.StringVar("DB_PASSWORD", "", env.Secret(), env.Require())
+)
+
+func Definitions() []env.Any {
+    return []env.Any{AppName, AppPort, DBPassword}
+}
+```
+
+`Resolve()` follows `OS > .env > Default`; empty counts as unset
+(optional → default, required → error). `Secret()` redacts the value
+from errors and generated examples even when the key looks innocent.
+
 ## Environment precedence
 
 ```text
@@ -90,13 +110,14 @@ malformed entries.
 Exit codes: `0` success, `1` configuration/validation failure,
 `2` CLI usage error.
 
-`gocfg env` (sync) and `gocfg check` arrive in v0.2 with the explicit
-`Var[T]` definitions API.
+`gocfg env` (sync) and `gocfg check` arrive in v0.2 on top of
+the `Var[T]` definitions API.
 
 ## Security
 
-- Secret values (keys containing `PASSWORD`, `SECRET`, `KEY`, `TOKEN`)
-  are redacted from error messages and never written to `.env.example`.
+- Secret values (`Secret()` option, or keys containing `PASSWORD`,
+  `SECRET`, `KEY`, `TOKEN`) are redacted from error messages and never
+  written to `.env.example`.
 - Generated `.env` uses `0600` permissions; writes are atomic.
 - Commit `.env.example`, never commit `.env`:
 

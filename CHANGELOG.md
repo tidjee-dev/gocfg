@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 Versioning follows [SemVer](https://semver.org/); no API stability is
 promised before `v1.0.0`.
 
+## Unreleased
+
+- `env.Var[T]` definitions: `StringVar`, `BoolVar`, `IntVar`, `Int64Var`,
+  `Float64Var`, `DurationVar` with `Secret()` / `Require()` options,
+  `Resolve()` (`OS > .env > Default`, empty counts as unset), and the
+  `Any` interface (`AnyKey`, `AnyDefault`, `AnyKind`, `IsSecret`,
+  `IsRequired`) for CLI consumption. Getters now share the same parsers.
+
 ## v0.1.0 — 2026-09-30
 
 First useful release (thin slice).

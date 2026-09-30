@@ -9,9 +9,14 @@ func Duration(key string, fallback time.Duration) (time.Duration, error) {
 	if !ok {
 		return fallback, nil
 	}
-	d, err := time.ParseDuration(v)
+	return parseDuration(key, v)
+}
+
+// parseDuration is the shared parser used by Duration and DurationVar.
+func parseDuration(key, value string) (time.Duration, error) {
+	d, err := time.ParseDuration(value)
 	if err != nil {
-		return 0, parseError(key, "duration", v)
+		return 0, parseError(key, "duration", value)
 	}
 	return d, nil
 }

@@ -9,9 +9,14 @@ func Int64(key string, fallback int64) (int64, error) {
 	if !ok {
 		return fallback, nil
 	}
-	n, err := strconv.ParseInt(v, 10, 64)
+	return parseInt64(key, v)
+}
+
+// parseInt64 is the shared parser used by Int64 and Int64Var.
+func parseInt64(key, value string) (int64, error) {
+	n, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
-		return 0, parseError(key, "integer", v)
+		return 0, parseError(key, "integer", value)
 	}
 	return n, nil
 }

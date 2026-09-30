@@ -89,10 +89,17 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
 
 ## v0.2 — planned (ROADMAP M8–M11)
 
-- [ ] S9 `Var[T]` definitions (M8)
-  - `Var[T]{Key, Default, Secret, Parse}` + `Resolve() (T, error)`,
-    `Definitions() []Any`, explicit list — no globals, no AST parsing,
-    no reflection-heavy magic. Definition tests.
+- [x] S9 `Var[T]` definitions (M8)
+  - `Var[T]{Key, Default, Kind, Secret, Required, Parse}` + key-aware
+    `Parser[T]`, `Resolve() (T, error)` (`OS > .env > Default`, empty
+    counts as unset), `Secret()` / `Require()` opts (non-generic `VarOpt`;
+    `Require` because `Required` is taken), extended `Any`
+    (`AnyKey/AnyDefault/AnyKind/IsSecret/IsRequired`).
+  - Getters refactored onto shared `parseBool/parseInt/...`; behavior
+    unchanged. Custom `Parse` errors: `*Error` kept with redaction
+    enforced, others pass through (secret Vars redact by replacement).
+  - README definitions section, CHANGELOG Unreleased entry.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 
 - [ ] S10 `gocfg env` (M9)
   - Discover `Definitions()`; append-missing-only merge (preserve values,

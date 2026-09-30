@@ -48,7 +48,14 @@ func IsSecretKey(key string) bool {
 
 // parseError builds a redacting *Error for key.
 func parseError(key, kind, value string) *Error {
-	if IsSecretKey(key) {
+	return parseErrorSecret(key, kind, value, false)
+}
+
+// parseErrorSecret builds a redacting *Error for key, forcing redaction
+// when secret is true (e.g. a Var with the Secret option) even if the
+// key does not look secret.
+func parseErrorSecret(key, kind, value string, secret bool) *Error {
+	if secret || IsSecretKey(key) {
 		return &Error{Key: key, Kind: kind, Secret: true}
 	}
 	return &Error{Key: key, Kind: kind, Value: value}
