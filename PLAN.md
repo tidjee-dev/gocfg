@@ -145,7 +145,12 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
     `splitList` groups both quote types (stripped), drops empties.
     `AnyDefault` renders Stringer/slices canonically, guards typed nils.
   - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
-- [ ] S15 `gocfg export`
+- [x] S15 `gocfg export`
+  - Schema-bounded output (`OS > .env`, never whole environ), `shell`
+    (POSIX-quoted) / `dotenv` (minimal quoting) / `json` formats, missing
+    keys warn on stderr with exit 0, bad format exits 2.
+  - `internal/envexport` core + cobra wiring, README + CHANGELOG.
+  - Done: 2026-09-30 (gate: gofmt clean, vet clean, tests -race pass).
 - [ ] S16 `gocfg diff`
 - [ ] S17 `gocfg doctor`
 - [ ] S18 v1 close-out (STABILITY.md, docs, gate, tag v1.0.0)

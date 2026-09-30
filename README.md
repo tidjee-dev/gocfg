@@ -139,6 +139,7 @@ if err := gocfg.LoadEnv(); err != nil {
 gocfg init [--force] [--dry-run] [--name my-app]
 gocfg env [--env-file .env --example-file .env.example --check]
 gocfg check [--env-file .env --example-file .env.example]
+gocfg export [--format shell|dotenv|json]
 gocfg validate [--env-file .env]
 gocfg validate --int APP_PORT --bool APP_DEBUG --required DATABASE_URL
 gocfg version
@@ -156,6 +157,11 @@ that is `validate`'s job.
 With no flags, `validate` checks every key declared in `.env.example`
 (OS > `.env`), warns about extra `.env` keys, and fails on missing or
 malformed entries.
+
+`export` prints schema keys resolved as `OS > .env` for sourcing
+(`eval "$(gocfg export)"`) or piping (`--format json`). Only declared
+keys are emitted, never the whole environment — but values print
+as-is on your explicit request, so keep the output out of logs.
 
 Exit codes: `0` success, `1` configuration/validation failure,
 `2` CLI usage error.

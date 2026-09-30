@@ -6,6 +6,9 @@ promised before `v1.0.0`.
 
 ## Unreleased
 
+- `gocfg export [--format shell|dotenv|json]`: prints schema keys resolved
+  as `OS > .env` (missing warn on stderr, exit 0); never dumps the whole
+  environment.
 - Extra types: `URL`, `IP`, `StringSlice`, `BoolSlice` getters plus
   `URLVar`, `IPVar`, `StringSliceVar`, `BoolSliceVar` (kinds `url`,
   `ip`, `stringslice`, `boolslice`, wired into `validate --defs`).
