@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 Versioning follows [SemVer](https://semver.org/); no API stability is
 promised before `v1.0.0`.
 
+## Unreleased
+
+- `cmd/gocfg`: package overview documentation (install, commands, exit codes).
+
 ## v0.2.0 — 2026-09-30
 
 - `env.Var[T]` definitions (`StringVar`, `BoolVar`, `IntVar`, `Int64Var`,
