@@ -4,13 +4,16 @@ All notable changes to this project are documented here.
 Versioning follows [SemVer](https://semver.org/); API stability is
 promised from `v1.0.0` (see `STABILITY.md`).
 
-## Unreleased
+## v1.3.0 — 2026-09-30
 
-- **Breaking:** canonical configuration directory moves from `config/`
-  to `internal/config` (`gocfg init`, `--config-dir` override,
-  `check`/`doctor` defaults). Legacy `config/` satisfies the default
-  with a move warning. Migrate with `git mv config internal/config`
-  and fix the import.
+- Canonical configuration directory moves from `config/` to
+  `internal/config` (`gocfg init`, `--config-dir` override,
+  `check`/`doctor` defaults). Go API unchanged; legacy `config/`
+  satisfies the default with a move warning. Migrate with
+  `git mv config internal/config` and fix the import.
+  (Not v2: Go mandates a `/v2` module suffix for majors, and the
+  Go API is untouched — the CLI default change rides a minor with
+  this migration note.)
 
 ## v1.2.1 — 2026-09-30
 
