@@ -167,7 +167,11 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
   - Full gate + dep-boundary + secret audit + live smoke of all commands.
   - Done: 2026-09-30.
 
-## Post-v1 (on tidjee, unreleased)
+## Post-v1: internal/config migration (shipped as v1.3.0, not v2.0.0:
+v2.0.0 was tagged then deleted — Go mandates a `/v2` module suffix
+for majors, making it uninstallable and breaking @latest. Go API
+untouched, so the CLI default change rides a minor with migration
+notes.)
 
 - [x] `init --with-definitions` (opt-in manifest scaffolding)
   - `config/vars.go` + `tools/gocfg-gen` templates, module path from
