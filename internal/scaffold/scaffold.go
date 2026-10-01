@@ -30,6 +30,9 @@ type Options struct {
 	// Definitions scaffolds config/vars.go and tools/gocfg-gen for the
 	// manifest workflow (opt-in: it duplicates the getter keys as Vars).
 	Definitions bool
+	// ConfigDir is the configuration directory, relative to Dir.
+	// Empty means the default "internal/config".
+	ConfigDir string
 }
 
 // FileResult describes the outcome for one file.
@@ -51,23 +54,40 @@ type Result struct {
 	ModuleFallback bool
 }
 
+// DefaultConfigDir is the canonical configuration directory.
+const DefaultConfigDir = "internal/config"
+
 type target struct {
 	rel  string
 	tmpl string // empty means render from tmpl name
 	perm os.FileMode
 }
 
-var targets = []target{
-	{rel: ".env", tmpl: "env.tmpl", perm: 0o600},
-	{rel: ".env.example", tmpl: "env.example.tmpl", perm: 0o644},
-	{rel: filepath.Join("config", "app.go"), tmpl: "app.go.tmpl", perm: 0o644},
-	{rel: filepath.Join("config", "config.go"), tmpl: "config.go.tmpl", perm: 0o644},
+// baseTargets builds the core file list for configDir.
+func baseTargets(configDir string) []target {
+	return []target{
+		{rel: ".env", tmpl: "env.tmpl", perm: 0o600},
+		{rel: ".env.example", tmpl: "env.example.tmpl", perm: 0o644},
+		{rel: filepath.Join(configDir, "app.go"), tmpl: "app.go.tmpl", perm: 0o644},
+		{rel: filepath.Join(configDir, "config.go"), tmpl: "config.go.tmpl", perm: 0o644},
+	}
 }
 
-// definitionTargets are appended when Options.Definitions is set.
-var definitionTargets = []target{
-	{rel: filepath.Join("config", "vars.go"), tmpl: "vars.go.tmpl", perm: 0o644},
-	{rel: filepath.Join("tools", "gocfg-gen", "main.go"), tmpl: "gocfg-gen.go.tmpl", perm: 0o644},
+// definitionTargets builds the manifest-workflow file list for configDir.
+func definitionTargets(configDir string) []target {
+	return []target{
+		{rel: filepath.Join(configDir, "vars.go"), tmpl: "vars.go.tmpl", perm: 0o644},
+		{rel: filepath.Join("tools", "gocfg-gen", "main.go"), tmpl: "gocfg-gen.go.tmpl", perm: 0o644},
+	}
+}
+
+// resolveConfigDir cleans the option and rejects escapes from Dir.
+func resolveConfigDir(dir string) (string, error) {
+	clean := filepath.Clean(dir)
+	if clean == "." || filepath.IsAbs(clean) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("scaffold: invalid config dir %q (must stay inside the project)", dir)
+	}
+	return clean, nil
 }
 
 // modulePath reads the module path from <dir>/go.mod. The second return
@@ -77,7 +97,7 @@ func modulePath(dir string) (string, bool) {
 	if err != nil {
 		return "example.com/my-app", false
 	}
-	for _, line := range strings.Split(string(raw), "\n") {
+	for line := range strings.SplitSeq(string(raw), "\n") {
 		line = strings.TrimSpace(line)
 		if rest, ok := strings.CutPrefix(line, "module "); ok {
 			if path, _, _ := strings.Cut(strings.TrimSpace(rest), " "); path != "" {
@@ -96,17 +116,26 @@ func Run(opts Options) (*Result, error) {
 	if opts.AppName == "" {
 		opts.AppName = "my-app"
 	}
+	configDir := opts.ConfigDir
+	if configDir == "" {
+		configDir = DefaultConfigDir
+	}
+	var err error
+	if configDir, err = resolveConfigDir(configDir); err != nil {
+		return nil, err
+	}
 	data := map[string]string{"AppName": opts.AppName}
 	res := &Result{DryRun: opts.DryRun}
 
-	all := targets
+	all := baseTargets(configDir)
 	if opts.Definitions {
 		modPath, fromGoMod := modulePath(opts.Dir)
 		data["ModulePath"] = modPath
+		data["ConfigImport"] = modPath + "/" + filepath.ToSlash(configDir)
 		if !fromGoMod {
 			res.ModuleFallback = true
 		}
-		all = append(append([]target{}, targets...), definitionTargets...)
+		all = append(all, definitionTargets(configDir)...)
 	}
 
 	for _, tg := range all {

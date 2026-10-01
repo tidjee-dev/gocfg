@@ -42,8 +42,8 @@ go mod init example.com/my-app
 gocfg init
 ```
 
-This creates `.env`, `.env.example`, and `config/` with error-returning
-getters. Then:
+This creates `.env`, `.env.example`, and `internal/config/` with
+error-returning getters (`--config-dir` overrides the directory). Then:
 
 ```bash
 gocfg validate --int APP_PORT --bool APP_DEBUG
@@ -54,7 +54,7 @@ See `examples/basic/` for a complete application.
 
 ## Configuration
 
-The application owns its configuration in `config/`:
+The application owns its configuration in `internal/config/`:
 
 ```go
 func Load() (Config, error) {
@@ -66,7 +66,12 @@ func Load() (Config, error) {
 }
 ```
 
-`gocfg` never discovers or executes `config/*.go` on its own.
+`gocfg` never discovers or executes `internal/config/*.go` on its own.
+
+Migrating from the pre-v2 layout: `git mv config internal/config`,
+fix the `config` import to `internal/config`, no value changes needed.
+A legacy `config/` directory keeps `check`/`doctor` green with a
+move warning.
 
 ## Definitions
 
@@ -100,7 +105,7 @@ import (
     "fmt"
     "os"
 
-    "example.com/my-app/config"
+    "example.com/my-app/internal/config"
     "github.com/tidjee-dev/gocfg/env"
 )
 
@@ -136,7 +141,7 @@ if err := gocfg.LoadEnv(); err != nil {
 ## CLI reference
 
 ```bash
-gocfg init [--force] [--dry-run] [--name my-app --gitignore=false --with-definitions]
+gocfg init [--force] [--dry-run] [--name my-app --gitignore=false --with-definitions --config-dir internal/config]
 gocfg env [--env-file .env --example-file .env.example --check]
 gocfg check [--env-file .env --example-file .env.example]
 gocfg diff [--env-file .env --example-file .env.example --defs .gocfg.json]
@@ -151,7 +156,9 @@ gocfg version
 example values, empty for secrets); existing content is never touched.
 `--check` reports without writing (exit 1 when out of sync).
 
-`check` is the static health inspection: `config/` exists, files parse,
+`check` is the static health inspection: the configuration directory
+(`internal/config` by default, legacy `config/` warns) exists, files
+parse,
 every schema key present in `.env` or OS (empty counts as present).
 It never touches the environment and performs no type coercion —
 that is `validate`'s job.

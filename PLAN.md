@@ -187,6 +187,17 @@ If all green: flip checkbox, append `Done:` line, commit + `git push origin tidj
     (`env`/`validate`/`diff --defs`) verified live.
 - [x] Docs: README flags, CHANGELOG Unreleased, ROADMAP §31 amendment.
 
+## Post-v1: internal/config migration (breaking → v2.0.0)
+
+- [ ] Scaffold `Options.ConfigDir` (default `internal/config`),
+  `ConfigImport` for templates, `..`/absolute rejection.
+- [ ] `--config-dir` on `init`/`check`/`doctor`; legacy shim
+  (warn always, strict on explicit flag).
+- [ ] `examples/basic`: `git mv` + imports + manifest.
+- [ ] Tests: goldens, legacy/custom-dir/rejection/matrix cases.
+- [ ] Docs: README, `main.go` doc, STABILITY, ROADMAP, CHANGELOG.
+- [ ] Gate, merge, tag v2.0.0, proxy verify.
+
 ## Traceability (ROADMAP → PLAN)
 
 ```text

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"example.com/my-app/config"
+	"example.com/my-app/internal/config"
 	"github.com/tidjee-dev/gocfg/env"
 )
 

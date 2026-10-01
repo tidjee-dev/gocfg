@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"example.com/my-app/config"
+	"example.com/my-app/internal/config"
 	gocfg "github.com/tidjee-dev/gocfg"
 )
 

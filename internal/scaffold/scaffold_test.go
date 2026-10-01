@@ -21,7 +21,7 @@ func TestRunCreatesAllFiles(t *testing.T) {
 			t.Fatalf("unexpected result %+v", f)
 		}
 	}
-	for _, rel := range []string{".env", ".env.example", "config/app.go", "config/config.go"} {
+	for _, rel := range []string{".env", ".env.example", "internal/config/app.go", "internal/config/config.go"} {
 		if _, err := os.Stat(filepath.Join(dir, rel)); err != nil {
 			t.Fatalf("%s: %v", rel, err)
 		}
@@ -223,7 +223,7 @@ func TestDefinitionsOffByDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, f := range res.Files {
-		if f.Path == filepath.Join("config", "vars.go") || strings.HasPrefix(f.Path, filepath.Join("tools")) {
+		if f.Path == filepath.Join("internal", "config", "vars.go") || strings.HasPrefix(f.Path, filepath.Join("tools")) {
 			t.Fatalf("definitions must be opt-in, got %+v", res.Files)
 		}
 	}
@@ -241,7 +241,7 @@ func TestDefinitionsScaffoldsWithModulePath(t *testing.T) {
 	if res.ModuleFallback {
 		t.Fatal("go.mod present, must not fall back")
 	}
-	vars, err := os.ReadFile(filepath.Join(dir, "config", "vars.go"))
+	vars, err := os.ReadFile(filepath.Join(dir, "internal", "config", "vars.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +252,7 @@ func TestDefinitionsScaffoldsWithModulePath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(gen), `"example.com/demo/config"`) {
+	if !strings.Contains(string(gen), `"example.com/demo/internal/config"`) {
 		t.Fatalf("wrong module path in helper:\n%s", gen)
 	}
 }
@@ -267,7 +267,7 @@ func TestDefinitionsFallbackWithoutGoMod(t *testing.T) {
 		t.Fatal("expected module fallback without go.mod")
 	}
 	gen, _ := os.ReadFile(filepath.Join(dir, "tools", "gocfg-gen", "main.go"))
-	if !strings.Contains(string(gen), `"example.com/my-app/config"`) {
+	if !strings.Contains(string(gen), `"example.com/my-app/internal/config"`) {
 		t.Fatalf("expected placeholder import:\n%s", gen)
 	}
 }
@@ -278,7 +278,7 @@ func TestDefinitionsSkipExisting(t *testing.T) {
 		t.Fatal(err)
 	}
 	marker := []byte("package config\n")
-	if err := os.WriteFile(filepath.Join(dir, "config", "vars.go"), marker, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "internal", "config", "vars.go"), marker, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	res, err := Run(Options{Dir: dir, Definitions: true})
@@ -286,11 +286,56 @@ func TestDefinitionsSkipExisting(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, f := range res.Files {
-		if f.Path == filepath.Join("config", "vars.go") && !f.Skipped {
+		if f.Path == filepath.Join("internal", "config", "vars.go") && !f.Skipped {
 			t.Fatalf("existing vars.go must be skipped: %+v", f)
 		}
 	}
-	if got, _ := os.ReadFile(filepath.Join(dir, "config", "vars.go")); string(got) != string(marker) {
+	if got, _ := os.ReadFile(filepath.Join(dir, "internal", "config", "vars.go")); string(got) != string(marker) {
 		t.Fatal("vars.go overwritten")
+	}
+}
+
+func TestCustomConfigDir(t *testing.T) {
+	dir := t.TempDir()
+	res, err := Run(Options{Dir: dir, ConfigDir: "config", Definitions: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, rel := range []string{"config/app.go", "config/vars.go"} {
+		if _, err := os.Stat(filepath.Join(dir, rel)); err != nil {
+			t.Fatalf("%s: %v", rel, err)
+		}
+	}
+	gen, _ := os.ReadFile(filepath.Join(dir, "tools", "gocfg-gen", "main.go"))
+	if !strings.Contains(string(gen), `"example.com/my-app/config"`) {
+		t.Fatalf("import must follow custom dir:\n%s", gen)
+	}
+	_ = res
+}
+
+func TestNestedConfigDir(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := Run(Options{Dir: dir, ConfigDir: "a/b"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "a", "b", "app.go")); err != nil {
+		t.Fatalf("nested dir: %v", err)
+	}
+}
+
+func TestConfigDirEscapeRejected(t *testing.T) {
+	for _, bad := range []string{"..", "../evil", "/abs", ".", ""} {
+		dir := t.TempDir()
+		opts := Options{Dir: dir, ConfigDir: bad}
+		if bad == "" {
+			// Empty means default; covered elsewhere, must succeed.
+			if _, err := Run(opts); err != nil {
+				t.Fatalf("empty must default: %v", err)
+			}
+			continue
+		}
+		if _, err := Run(opts); err == nil {
+			t.Fatalf("%q: expected rejection", bad)
+		}
 	}
 }

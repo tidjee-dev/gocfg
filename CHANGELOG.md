@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 Versioning follows [SemVer](https://semver.org/); API stability is
 promised from `v1.0.0` (see `STABILITY.md`).
 
+## Unreleased
+
+- **Breaking:** canonical configuration directory moves from `config/`
+  to `internal/config` (`gocfg init`, `--config-dir` override,
+  `check`/`doctor` defaults). Legacy `config/` satisfies the default
+  with a move warning. Migrate with `git mv config internal/config`
+  and fix the import.
+
 ## v1.2.1 — 2026-09-30
 
 - Consistency: `APP_URL` / `DATABASE_URL` are `URL` kind everywhere

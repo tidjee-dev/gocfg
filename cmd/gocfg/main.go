@@ -9,7 +9,7 @@
 //
 // Commands:
 //
-//	gocfg init      create .env, .env.example and config/
+//	gocfg init      create .env, .env.example and internal/config/
 //	gocfg env       complete .env from .env.example (append-missing-only)
 //	gocfg check     static health inspection (files, parse, key presence)
 //	gocfg validate  validate values (schema presence or typed specs)

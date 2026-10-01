@@ -12,11 +12,12 @@ import (
 
 	"github.com/tidjee-dev/gocfg/env"
 	"github.com/tidjee-dev/gocfg/internal/dotenv"
+	"github.com/tidjee-dev/gocfg/internal/scaffold"
 )
 
 // newDoctorCmd builds `gocfg doctor`.
 func newDoctorCmd() *cobra.Command {
-	var envFile, exampleFile string
+	var envFile, exampleFile, configDir string
 
 	cmd := &cobra.Command{
 		Use:   "doctor",
@@ -58,10 +59,11 @@ always exits 0 (machine checks with exit codes are check's job).`,
 				return fi.Mode().Perm(), raw, true
 			}
 
-			if _, err := os.Stat("config"); err != nil || !isDir("config") {
-				bad("config/: not found (run gocfg init)")
+			warn := func(s string) { note("%s", s) }
+			if err := checkConfigDir(configDir, cmd.Flags().Changed("config-dir"), warn); err != nil {
+				bad("%v", err)
 			} else {
-				ok("config/ present")
+				ok("%s/ present", configDir)
 			}
 
 			envMode, rawEnv, haveEnv := stat(envFile, ".env")
@@ -106,6 +108,7 @@ always exits 0 (machine checks with exit codes are check's job).`,
 	}
 	cmd.Flags().StringVar(&envFile, "env-file", ".env", "env file to inspect")
 	cmd.Flags().StringVar(&exampleFile, "example-file", ".env.example", "example file to inspect")
+	cmd.Flags().StringVar(&configDir, "config-dir", scaffold.DefaultConfigDir, "configuration directory to inspect")
 	return cmd
 }
 

@@ -18,15 +18,16 @@ var (
 
 func newInitCmd() *cobra.Command {
 	var force, dryRun, gitignore, definitions bool
-	var name string
+	var name, configDir string
 
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Create the initial project structure",
-		Long: `Creates .env, .env.example and config/ in the current directory.
+		Long: `Creates .env, .env.example and the configuration directory
+(default internal/config) in the current directory.
 Existing files are skipped unless --force is given.
 Ensures .env is covered by .gitignore unless --gitignore=false.
-With --with-definitions, also scaffolds config/vars.go and
+With --with-definitions, also scaffolds vars.go and
 tools/gocfg-gen for the manifest workflow.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
@@ -36,12 +37,16 @@ tools/gocfg-gen for the manifest workflow.`,
 			if name == "" {
 				name = filepath.Base(dir)
 			}
+			if configDir == "" {
+				configDir = scaffold.DefaultConfigDir
+			}
 			res, err := scaffold.Run(scaffold.Options{
 				Dir: dir, AppName: name, Force: force, DryRun: dryRun,
 				Gitignore: gitignore, Definitions: definitions,
+				ConfigDir: configDir,
 			})
 			if err != nil {
-				return err
+				return &ExitError{Code: 2, Err: err}
 			}
 			out := cmd.OutOrStdout()
 			for _, f := range res.Files {
@@ -90,7 +95,8 @@ tools/gocfg-gen for the manifest workflow.`,
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite existing files")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be created")
 	cmd.Flags().BoolVar(&gitignore, "gitignore", true, "ensure .env is covered by .gitignore")
-	cmd.Flags().BoolVar(&definitions, "with-definitions", false, "scaffold config/vars.go and tools/gocfg-gen for the manifest workflow")
+	cmd.Flags().BoolVar(&definitions, "with-definitions", false, "scaffold vars.go and tools/gocfg-gen for the manifest workflow")
 	cmd.Flags().StringVar(&name, "name", "", "application name (default: directory name)")
+	cmd.Flags().StringVar(&configDir, "config-dir", scaffold.DefaultConfigDir, "configuration directory to create")
 	return cmd
 }

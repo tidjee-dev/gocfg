@@ -22,7 +22,7 @@ The core idea:
 - Configuration is written in **Go**
 - Environment-specific values come from `.env` and OS environment variables
 - Configuration is **type-safe**
-- `config/` is the application's configuration source
+- `internal/config/` is the application's configuration source
 - `.env` and `.env.example` can be generated from configuration definitions
 - A small CLI manages initialization, environment files, and validation
 - No YAML/JSON/TOML configuration is required
@@ -31,7 +31,7 @@ Example application:
 
 ```text
 my-app/
-├── config/
+├── internal/config/
 │   ├── app.go
 │   ├── database.go
 │   └── config.go
@@ -47,7 +47,7 @@ my-app/
 
 - [ ] Simple Go-first configuration
 - [ ] Type-safe environment values
-- [ ] Laravel-inspired `config/` organization
+- [ ] Laravel-inspired `internal/config/` organization
 - [ ] `.env` support
 - [ ] OS environment support
 - [ ] Explicit configuration composition
@@ -178,7 +178,7 @@ func Load() (Config, error) {
 }
 ```
 
-`gocfg` should **not** dynamically discover and execute `config/*.go`.
+`gocfg` should **not** dynamically discover and execute `internal/config/*.go`.
 
 # 5. Environment Precedence
 
@@ -267,7 +267,7 @@ gocfg/
 │           ├── app.go.tmpl
 │           └── config.go.tmpl
 │
-├── config.go
+├── gocfg.go
 ├── errors.go
 ├── go.mod
 ├── go.sum
@@ -277,7 +277,7 @@ gocfg/
 ├── LICENSE
 └── examples/
     └── basic/
-        ├── config/
+        ├── internal/config/
         │   ├── app.go
         │   ├── database.go
         │   └── config.go
@@ -547,14 +547,14 @@ gocfg.LoadEnv(".env")
 Potential future support:
 
 ```go
-gocfg.LoadEnv("config/.env")
+gocfg.LoadEnv("internal/config/.env")
 ```
 
 Do not make `.env` location assumptions part of the core configuration API.
 
 # 15. Configuration Definitions
 
-A major design goal is making `config/` the source of truth for environment configuration.
+A major design goal is making `internal/config/` the source of truth for environment configuration.
 
 The CLI should eventually know which environment variables are used by the application.
 
@@ -720,9 +720,9 @@ Creates:
 ```text
 .env
 .env.example
-config/
+internal/config/
 ├── app.go
-└── config.go
+└── gocfg.go
 ```
 
 Possible initial generated files:
@@ -745,7 +745,7 @@ APP_DEBUG=true
 APP_URL=http://localhost:9000
 ```
 
-### `config/app.go`
+### `internal/config/app.go`
 
 ```go
 package config
@@ -784,7 +784,7 @@ func App() (AppConfig, error) {
 }
 ```
 
-### `config/config.go`
+### `internal/config/config.go`
 
 ```go
 package config
@@ -853,7 +853,9 @@ internal/scaffold/
     ├── env.tmpl
     ├── env.example.tmpl
     ├── app.go.tmpl
-    └── config.go.tmpl
+    ├── config.go.tmpl
+    ├── vars.go.tmpl
+    └── gocfg-gen.go.tmpl
 ```
 
 The CLI binary should contain its templates and should not depend on files existing beside the executable.
@@ -867,7 +869,7 @@ Recommended:
 ```text
 .env            0600
 .env.example    0644
-config/*.go     0644
+internal/config/*.go     0644
 ```
 
 The exact behavior should account for existing files and platform differences.
@@ -923,8 +925,8 @@ gocfg
 
 ✓ created .env
 ✓ created .env.example
-✓ created config/app.go
-✓ created config/config.go
+✓ created internal/config/app.go
+✓ created internal/config/config.go
 
 Project initialized.
 ```
@@ -935,7 +937,7 @@ For `check`:
 gocfg check
 
 ✓ .env found
-✓ config/ found
+✓ internal/config/ found
 ✓ configuration definitions found
 ✓ environment is valid
 ```
@@ -954,7 +956,7 @@ Checks:
 
 - `.env` exists
 - `.env.example` exists
-- `config/` exists
+- `internal/config/` exists
 - required keys present (string presence only, no type coercion)
 - `.env` parses without error (line numbers on failure)
 - missing / extra keys vs `.env.example` reported as warnings
@@ -1128,7 +1130,7 @@ Use `t.TempDir()` for filesystem isolation.
 
 - [x] creates `.env`
 - [x] creates `.env.example`
-- [x] creates `config/`
+- [x] creates `internal/config/`
 - [x] creates config files
 - [x] does not overwrite existing files
 - [x] `--force` overwrites
@@ -1147,7 +1149,7 @@ Use `t.TempDir()` for filesystem isolation.
 ### `check` (v0.2, S11)
 
 - [ ] detects missing `.env`
-- [ ] detects missing `config/`
+- [ ] detects missing `internal/config/`
 - [ ] detects invalid definitions
 - [ ] reports inconsistencies
 
@@ -1232,7 +1234,7 @@ gocfg validate
 Explain:
 
 ```text
-config/
+internal/config/
 .env
 .env.example
 ```
@@ -1259,7 +1261,7 @@ Provide a complete example:
 
 ```text
 examples/basic/
-├── config/
+├── internal/config/
 │   ├── app.go
 │   ├── database.go
 │   └── config.go
@@ -1277,7 +1279,7 @@ import (
     "fmt"
     "log"
 
-    "example.com/my-app/config"
+    "example.com/my-app/internal/config"
 )
 
 func main() {
@@ -1368,8 +1370,8 @@ Decided order: core first, then CLI. Thin v0.1 = M0–M7. M8–M10 deferred to v
 
 - [ ] Create scaffold system
 - [ ] Add embedded templates
-- [ ] Generate `.env` (`0600`), `.env.example` (`0644`), `config/` (`0644`)
-- [ ] Generate error-returning `config/app.go`, `config/config.go`
+- [ ] Generate `.env` (`0600`), `.env.example` (`0644`), `internal/config/` (`0644`)
+- [ ] Generate error-returning `internal/config/app.go`, `internal/config/config.go`
 - [ ] Detect existing files, skip with message, `--force` to overwrite
 - [ ] Add `--dry-run`, `--name`
 - [ ] Add Lipgloss output
@@ -1457,7 +1459,7 @@ gocfg version
 ```text
 .env
 .env.example
-config/
+internal/config/
 ├── app.go
 └── config.go
 ```
@@ -1583,7 +1585,7 @@ Avoid introducing another configuration language unnecessarily.
 
 The library must remain useful without installing the CLI.
 
-## 6. `config/` is the source of truth
+## 6. `internal/config/` is the source of truth
 
 Environment files are generated from explicit configuration definitions rather than arbitrary source-code parsing.
 
@@ -1629,7 +1631,7 @@ Result:
 
 ```text
 my-app/
-├── config/
+├── internal/config/
 │   ├── app.go
 │   └── config.go
 ├── .env
@@ -1690,7 +1692,7 @@ The intended architecture is:
                 ┌────────────────────┼────────────────────┐
                 │                    │                    │
                 ▼                    ▼                    ▼
-             env/*.go             .env              config/*
+             env/*.go             .env              internal/config/*
                 │                    │                    │
                 └────────────────────┼────────────────────┘
                                      │

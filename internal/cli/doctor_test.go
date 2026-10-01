@@ -9,7 +9,7 @@ import (
 
 func TestDoctorNarrative(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "internal", "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	// Duplicate key, OS shadowing, secret value in example, no .gitignore.
@@ -29,7 +29,7 @@ func TestDoctorNarrative(t *testing.T) {
 	for _, want := range []string{
 		"gocfg doctor",
 		"toolchain: go",
-		"✓ config/ present",
+		"✓ internal/config/ present",
 		".env parses (2 keys)",
 		"no .gitignore",
 		"duplicate key in .env: GOCFG_DR_A (2x, last wins)",

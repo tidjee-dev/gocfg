@@ -10,7 +10,7 @@ import (
 
 func TestCheckGreen(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "internal", "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	writeNamedEnv(t, dir, ".env", "GOCFG_C_ONE=1\n", 0o600)
@@ -59,7 +59,7 @@ func TestCheckMissingConfigDir(t *testing.T) {
 
 func TestCheckMissingKeyFails(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "internal", "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	writeNamedEnv(t, dir, ".env", "GOCFG_CK_ONE=1\n", 0o600)
@@ -82,7 +82,7 @@ func TestCheckMissingKeyFails(t *testing.T) {
 
 func TestCheckOSSatisfiesWithoutEnvFile(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "internal", "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	writeNamedEnv(t, dir, ".env.example", "GOCFG_CO_ONLY=\n", 0o644)
@@ -103,7 +103,7 @@ func TestCheckOSSatisfiesWithoutEnvFile(t *testing.T) {
 
 func TestCheckEmptyCountsAsPresent(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "internal", "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	// Empty in .env: check passes (presence), validate would fail (values).
@@ -122,7 +122,7 @@ func TestCheckEmptyCountsAsPresent(t *testing.T) {
 
 func TestCheckMalformedEnvFails(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "internal", "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	writeNamedEnv(t, dir, ".env", "BROKEN LINE\n", 0o600)
@@ -145,7 +145,7 @@ func TestCheckMalformedEnvFails(t *testing.T) {
 
 func TestCheckExtrasWarnOnly(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "internal", "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	writeNamedEnv(t, dir, ".env", "GOCFG_CX_ONE=1\nGOCFG_CX_EXTRA=9\n", 0o600)
@@ -161,5 +161,46 @@ func TestCheckExtrasWarnOnly(t *testing.T) {
 	}
 	if !strings.Contains(sb.String(), "! GOCFG_CX_EXTRA (not in .env.example)") {
 		t.Fatalf("missing extra warning in:\n%s", sb.String())
+	}
+}
+
+func TestCheckLegacyWarnsButPasses(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeNamedEnv(t, dir, ".env", "GOCFG_CL_ONE=1\n", 0o600)
+	writeNamedEnv(t, dir, ".env.example", "GOCFG_CL_ONE=\n", 0o644)
+	chdir(t, dir)
+
+	root := newRootCmd()
+	var sb strings.Builder
+	root.SetOut(&sb)
+	root.SetArgs([]string{"check"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("legacy must satisfy default: %v\nout:\n%s", err, sb.String())
+	}
+	if !strings.Contains(sb.String(), "legacy config/ found, move to internal/config") {
+		t.Fatalf("missing legacy warning in:\n%s", sb.String())
+	}
+}
+
+func TestCheckExplicitStrict(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "config"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeNamedEnv(t, dir, ".env", "GOCFG_CS_ONE=1\n", 0o600)
+	writeNamedEnv(t, dir, ".env.example", "GOCFG_CS_ONE=\n", 0o644)
+	chdir(t, dir)
+
+	root := newRootCmd()
+	var sb strings.Builder
+	root.SetOut(&sb)
+	root.SetArgs([]string{"check", "--config-dir", "elsewhere"})
+	err := root.Execute()
+	var ee *ExitError
+	if !errors.As(err, &ee) || ee.Code != 1 {
+		t.Fatalf("expected config ExitError{1}, got %v", err)
 	}
 }

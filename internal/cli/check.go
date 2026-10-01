@@ -10,6 +10,7 @@ import (
 
 	"github.com/tidjee-dev/gocfg/env"
 	"github.com/tidjee-dev/gocfg/internal/dotenv"
+	"github.com/tidjee-dev/gocfg/internal/scaffold"
 )
 
 // newCheckCmd builds `gocfg check`.
@@ -19,14 +20,16 @@ import (
 // environment and performs no type coercion — that is validate's job.
 // Exit 1 on missing/unparseable files or keys.
 func newCheckCmd() *cobra.Command {
-	var envFile, exampleFile string
+	var envFile, exampleFile, configDir string
 
 	cmd := &cobra.Command{
 		Use:   "check",
 		Short: "Check project configuration health",
 		Long: `Inspects configuration files without touching the environment:
-config/ exists, .env.example exists and parses, .env parses, and every
-schema key is present in .env or the OS environment.`,
+the configuration directory exists, .env.example exists and parses,
+.env parses, and every schema key is present in .env or the OS
+environment. A legacy config/ directory satisfies the default with
+a warning.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			out := cmd.OutOrStdout()
 			failed := false
@@ -41,8 +44,8 @@ schema key is present in .env or the OS environment.`,
 				fmt.Fprintf(out, "%s %s\n", warnStyle.Render("!"), msg)
 			}
 
-			if fi, err := os.Stat("config"); err != nil || !fi.IsDir() {
-				bad("configuration directory", fmt.Errorf("config/ not found"))
+			if err := checkConfigDir(configDir, cmd.Flags().Changed("config-dir"), warn); err != nil {
+				bad("configuration directory", err)
 			} else {
 				ok("configuration directory")
 			}
@@ -108,5 +111,6 @@ schema key is present in .env or the OS environment.`,
 	}
 	cmd.Flags().StringVar(&envFile, "env-file", ".env", "env file to inspect")
 	cmd.Flags().StringVar(&exampleFile, "example-file", ".env.example", "schema file to inspect")
+	cmd.Flags().StringVar(&configDir, "config-dir", scaffold.DefaultConfigDir, "configuration directory to inspect")
 	return cmd
 }

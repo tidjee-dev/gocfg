@@ -32,6 +32,9 @@ Before that, anything could change; from here the following is frozen.
   `\t` → tab, no `:` separator).
 - File contracts: new `.env` files are `0600`; existing content,
   comments, order and permissions are preserved by `env`/`init`.
+- Scaffold layout: `internal/config` by default, `--config-dir`
+  override; a legacy `config/` satisfies `check`/`doctor` with
+  a warning (v2 compat shim).
 
 ## Explicitly unstable
 
